@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#FF6B00"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="AA Alarm"/>
+<title>AA Alarm CRM</title>
+<link rel="manifest" href="manifest.json"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{--or:#EA580C;--ord:#C2410C;--bg:#FFF7F0;--card:#FFFFFF;--card2:#FEF3E8;--bdr:#FDBA74;--txt:#1C0F00;--mut:#78716C;--dim:#FDE8D0;--grn:#16A34A;--red:#DC2626;--ylw:#D97706;--blu:#2563EB;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--txt);max-width:480px;margin:0 auto;min-height:100vh;overflow-x:hidden;}
+input,select,textarea,button{font-family:'Barlow',sans-serif;}
+::-webkit-scrollbar{width:0;}
+.screen{display:none;}.screen.active{display:block;}
+#hdr{background:var(--bg);padding:12px 16px 10px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+#bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,247,240,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--bdr);display:flex;padding:8px 0 max(16px,env(safe-area-inset-bottom));z-index:200;}
+.nb{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;}
+.ni{width:40px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s;}
+.ni.act{background:rgba(255,107,0,.22);}
+.nl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);}
+.nl.act{color:var(--or);font-weight:800;}
+#mc{overflow-y:auto;height:calc(100vh - 118px);padding:14px 14px 8px;}
+.card{background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--bdr);margin-bottom:10px;}
+.c2{background:var(--card2);border-radius:12px;padding:12px 14px;border:1px solid var(--bdr);margin-bottom:8px;}
+.btn{padding:12px 16px;border-radius:12px;border:none;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.bor{background:linear-gradient(135deg,var(--or),var(--ord));color:#fff;box-shadow:0 4px 16px rgba(255,107,0,.35);}
+.bg{background:linear-gradient(135deg,var(--grn),#16a34a);color:#fff;}
+.br{background:transparent;color:var(--red);border:1.5px solid var(--red);}
+.bo{background:transparent;color:var(--mut);border:1.5px solid var(--bdr);}
+.bsm{padding:7px 12px;font-size:11px;border-radius:9px;}
+.bfl{width:100%;}
+.fl{color:var(--mut);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:5px;}
+.fi{width:100%;padding:11px 13px;border-radius:11px;background:var(--card2);border:1.5px solid var(--bdr);color:var(--txt);font-size:14px;font-family:'Barlow',sans-serif;outline:none;-webkit-appearance:none;}
+.fi:focus{border-color:var(--or);}
+.fw{margin-bottom:13px;}
+.bdg{padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+#mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:flex-end;justify-content:center;}
+#mov.open{display:flex;}
+#mbox{width:100%;max-width:480px;background:var(--card);border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;border:1px solid var(--bdr);border-bottom:none;}
+.mhdr{padding:15px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:var(--card);z-index:10;}
+.mbody{padding:16px 18px 40px;}
+#toast{display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:12px;font-size:13px;font-weight:700;z-index:2000;box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;}
+.sb{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:12px;padding:10px 13px;border:1.5px solid var(--bdr);margin-bottom:10px;}
+.sb input{flex:1;background:transparent;border:none;outline:none;color:var(--txt);font-size:14px;font-family:'Barlow',sans-serif;}
+.pills{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.pill{padding:6px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--bdr);background:var(--card);color:var(--mut);font-family:'Barlow',sans-serif;}
+.pill.act{background:var(--or);color:#fff;border-color:var(--or);}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.sc{background:var(--card);border-radius:14px;padding:13px;border:1px solid var(--bdr);}
+.sv{font-size:22px;font-weight:900;line-height:1.1;}
+.sl{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.stl{color:var(--mut);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.pb{height:6px;background:var(--dim);border-radius:3px;overflow:hidden;}
+.pf{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--or),var(--ord));}
+.qty-ctrl{display:flex;align-items:center;gap:7px;}
+.qb{width:30px;height:30px;border-radius:8px;border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.qm{background:var(--card2);color:var(--txt);border:1px solid var(--bdr);}
+.qp{background:var(--or);color:#fff;}
+.qn{min-width:20px;text-align:center;font-size:14px;font-weight:700;}
+#ls{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 22px;}
+#ls.active{display:flex;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ls" class="active">
+  <div style="width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#FF6B00,#CC5500);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;margin-bottom:14px;box-shadow:0 0 40px rgba(255,107,0,.4);">AA</div>
+  <div style="font-size:24px;font-weight:900;margin-bottom:4px;">AA Alarm CRM</div>
+  <div style="color:var(--mut);font-size:11px;letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;">Alarm System Management</div>
+  <div style="color:var(--or);font-size:11px;font-weight:700;margin-bottom:28px;">🛡 Alarm System Solutions</div>
+  <div style="display:flex;background:var(--card);border-radius:13px;padding:4px;margin-bottom:18px;width:100%;border:1px solid var(--bdr);">
+    <button class="rtab active" data-role="superadmin" onclick="selRole(this)" style="flex:1;padding:9px 0;border-radius:9px;border:none;background:var(--or);color:#fff;font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;cursor:pointer;">Super Admin</button>
+    <button class="rtab" data-role="admin" onclick="selRole(this)" style="flex:1;padding:9px 0;border-radius:9px;border:none;background:transparent;color:var(--mut);font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;cursor:pointer;">Admin</button>
+    <button class="rtab" data-role="user" onclick="selRole(this)" style="flex:1;padding:9px 0;border-radius:9px;border:none;background:transparent;color:var(--mut);font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;cursor:pointer;">User</button>
+    <button class="rtab" data-role="pta" onclick="selRole(this)" style="flex:1;padding:9px 0;border-radius:9px;border:none;background:transparent;color:var(--mut);font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;cursor:pointer;">PTA</button>
+  </div>
+  <div class="fw" style="width:100%"><label class="fl">Username</label><input class="fi" id="lu" value="superadmin"/></div>
+  <div class="fw" style="width:100%"><label class="fl">Password</label><input class="fi" id="lp" type="password" placeholder="Password"/><div style="color:var(--mut);font-size:11px;margin-top:4px;" id="lhint">Hint: super123</div></div>
+  <div style="color:var(--red);font-size:12px;margin-bottom:10px;min-height:16px;" id="lerr"></div>
+  <button class="btn bor bfl" onclick="doLogin()">Sign In →</button>
+</div>
+
+<!-- HEADER -->
+<div id="hdr" style="display:none;">
+  <div style="display:flex;align-items:center;gap:9px;">
+    <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--or),var(--ord));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;">AA</div>
+    <div><div style="font-size:13px;font-weight:800;">AA Alarm CRM</div><div style="font-size:10px;color:var(--mut);">Alarm Systems Management</div></div>
+  </div>
+  <div class="bdg" id="hbadge" style="background:rgba(255,107,0,.2);color:var(--or);">Admin</div>
+</div>
+
+<!-- MAIN -->
+<div id="mc" style="display:none;">
+
+  <!-- DASHBOARD -->
+  <div id="tab-dash" class="screen active">
+    <div style="margin-bottom:16px;">
+      <div style="color:var(--mut);font-size:12px;">Welcome,</div>
+      <div style="font-size:21px;font-weight:900;" id="hgreet">Admin</div>
+    </div>
+    <div class="sgrid">
+      <div class="sc"><div class="sl">Total Customers</div><div class="sv" style="color:var(--or);" id="s-total">0</div></div>
+      <div class="sc"><div class="sl">Active</div><div class="sv" style="color:var(--grn);" id="s-active">0</div></div>
+    </div>
+    <div class="sgrid" style="margin-bottom:16px;">
+      <div class="sc"><div class="sl">Total Revenue</div><div class="sv" style="color:var(--grn);font-size:14px;" id="s-rev">₨0</div></div>
+      <div class="sc"><div class="sl">Unpaid Invoices</div><div class="sv" style="color:var(--red);" id="s-inv">0</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <button class="card" onclick="openM('add-cust')" style="cursor:pointer;text-align:left;border:1px solid var(--bdr);"><div style="font-size:22px;margin-bottom:6px;">👤</div><span style="font-size:13px;font-weight:700;">Add Customer</span></button>
+      <button class="card" onclick="openM('new-invoice')" style="cursor:pointer;text-align:left;border:1px solid var(--bdr);"><div style="font-size:22px;margin-bottom:6px;">🧾</div><span style="font-size:13px;font-weight:700;">New Invoice</span></button>
+      <button class="card" onclick="goTab('customers')" style="cursor:pointer;text-align:left;border:1px solid var(--bdr);"><div style="font-size:22px;margin-bottom:6px;">📋</div><span style="font-size:13px;font-weight:700;">Customers</span></button>
+      <button class="card" onclick="goTab('invoices')" style="cursor:pointer;text-align:left;border:1px solid var(--bdr);"><div style="font-size:22px;margin-bottom:6px;">💰</div><span style="font-size:13px;font-weight:700;">Invoices</span></button>
+    </div>
+    <div class="stl">Recent Invoices</div>
+    <div id="recent-list"></div>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div id="tab-customers" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:20px;font-weight:900;">Customers <span style="color:var(--mut);font-size:14px;" id="ccount"></span></div>
+      <button class="btn bor bsm" onclick="openM('add-cust')">+ Add</button>
+    </div>
+    <div class="sb"><span>🔍</span><input id="csearch" placeholder="Name, mobile, CNIC, house, block…" oninput="renderCusts()"/><button onclick="document.getElementById('csearch').value='';renderCusts()" style="background:none;border:none;cursor:pointer;color:var(--mut);">✕</button></div>
+    <div class="pills" id="proj-pills">
+      <button class="pill act" onclick="setProjFilter('all',this)">All</button>
+    </div>
+    <div id="custs-list"></div>
+  </div>
+
+  <!-- INVOICES -->
+  <div id="tab-invoices" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:20px;font-weight:900;">Invoices</div>
+      <button class="btn bor bsm" onclick="openM('new-invoice')">+ New</button>
+    </div>
+    <div id="upaid-bar" style="display:none;background:rgba(239,68,68,.12);border:1.5px solid rgba(239,68,68,.4);border-radius:12px;padding:10px 14px;margin-bottom:10px;justify-content:space-between;align-items:center;">
+      <span style="color:var(--red);font-size:13px;font-weight:700;">⚠ Unpaid Total</span>
+      <span style="color:var(--red);font-size:15px;font-weight:900;" id="upaid-amt"></span>
+    </div>
+    <div class="sb"><span>🔍</span><input id="isearch" placeholder="Invoice ID or customer name…" oninput="renderInvoices()"/></div>
+    <div class="pills">
+      <button class="pill act" onclick="setInvFilter('all',this)">All</button>
+      <button class="pill" onclick="setInvFilter('paid',this)" style="color:var(--grn);">✓ Paid</button>
+      <button class="pill" onclick="setInvFilter('unpaid',this)" style="color:var(--red);">⚠ Unpaid</button>
+    </div>
+    <div id="inv-list"></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div id="tab-reports" class="screen">
+    <div style="font-size:20px;font-weight:900;margin-bottom:16px;">Reports</div>
+    <div class="sgrid">
+      <div class="sc"><div class="sl">Total Revenue</div><div class="sv" style="color:var(--grn);font-size:14px;" id="r-rev">₨0</div></div>
+      <div class="sc"><div class="sl">Outstanding</div><div class="sv" style="color:var(--red);font-size:14px;" id="r-out">₨0</div></div>
+      <div class="sc"><div class="sl">Installations</div><div class="sv" style="color:var(--or);" id="r-inst">0</div></div>
+      <div class="sc"><div class="sl">This Month</div><div class="sv" style="color:var(--blu);font-size:14px;" id="r-mnth">₨0</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;"><div class="stl">Customers by Project</div><div id="proj-report"></div></div>
+    <div class="card"><div class="stl">Invoice Summary</div><div style="display:flex;justify-content:space-around;" id="inv-summary"></div></div>
+  </div>
+
+  <!-- USERS -->
+  <div id="tab-users" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:20px;font-weight:900;">Manage Users</div>
+      <button class="btn bor bsm" onclick="openM('add-user')">+ Add</button>
+    </div>
+    <div id="users-list"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="tab-settings" class="screen">
+    <div style="font-size:20px;font-weight:900;margin-bottom:16px;">Settings</div>
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:11px;">
+        <div style="width:46px;height:46px;border-radius:11px;background:linear-gradient(135deg,var(--or),var(--ord));display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;">AA</div>
+        <div><div style="font-size:14px;font-weight:700;" id="sname">Admin</div><div style="color:var(--mut);font-size:12px;">AA Alarm CRM</div></div>
+      </div>
+    </div>
+    <div id="price-settings">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="stl" style="margin:0;">🛡 Alarm Item Prices</div>
+        <button class="btn bsm" id="epr-btn" onclick="toggleEditPrices()" style="background:rgba(255,107,0,.2);color:var(--or);border:none;">Edit Prices</button>
+      </div>
+      <div id="price-list"></div>
+    </div>
+    <div id="no-set" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:11px;padding:12px;margin-bottom:14px;color:var(--red);font-size:13px;">🔒 Settings restricted to Admin and Super Admin.</div>
+    <button class="btn br bfl" onclick="doLogout()" style="margin-top:8px;">Sign Out</button>
+  </div>
+
+  <!-- PTA IMEI -->
+  <div id="tab-pta" class="screen">
+    <div style="font-size:20px;font-weight:900;margin-bottom:14px;">PTA — IMEI Records</div>
+    <div class="sgrid" style="margin-bottom:14px;">
+      <div class="sc"><div class="sl">Total IMEIs</div><div class="sv" style="color:var(--or);" id="pta-total">0</div></div>
+      <div class="sc"><div class="sl">Pending Approval</div><div class="sv" style="color:var(--ylw);" id="pta-pending">0</div></div>
+    </div>
+    <div id="pta-controls"></div>
+    <div class="pills" id="pta-pills"></div>
+    <div class="sb"><span>🔍</span><input id="pta-search" placeholder="Search IMEI…" oninput="renderImeis()"/></div>
+    <div id="imei-list"></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div id="bnav" style="display:none;">
+  <button class="nb" onclick="goTab('dash')"><div class="ni act" id="ni-dash">🏠</div><span class="nl act" id="nl-dash">Home</span></button>
+  <button class="nb" onclick="goTab('customers')"><div class="ni" id="ni-customers">👥</div><span class="nl" id="nl-customers">Customers</span></button>
+  <button class="nb" onclick="goTab('invoices')"><div class="ni" id="ni-invoices">🧾</div><span class="nl" id="nl-invoices">Invoices</span></button>
+  <button class="nb" onclick="goTab('reports')"><div class="ni" id="ni-reports">📊</div><span class="nl" id="nl-reports">Reports</span></button>
+  <button class="nb" id="nb-users" style="display:none;" onclick="goTab('users')"><div class="ni" id="ni-users">👤</div><span class="nl" id="nl-users">Users</span></button>
+  <button class="nb" id="nb-pta" style="display:none;" onclick="goTab('pta')"><div class="ni" id="ni-pta">📲</div><span class="nl" id="nl-pta">PTA IMEI</span></button>
+  <button class="nb" onclick="goTab('settings')"><div class="ni" id="ni-settings">⚙️</div><span class="nl" id="nl-settings">Settings</span></button>
+</div>
+
+<div id="toast"></div>
+<div id="mov" onclick="closeOutside(event)">
+  <div id="mbox">
+    <div class="mhdr"><span style="font-size:17px;font-weight:800;" id="mtitle">—</span><button onclick="closeM()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--mut);">✕</button></div>
+    <div class="mbody" id="mbody"></div>
+  </div>
+</div>
+
+<script>
+const ITEMS=[
+  {id:"alarm_panel",name:"Alarm Panel",price:3500},
+  {id:"door_contact",name:"Door Contact",price:450},
+  {id:"motion_sensor",name:"Motion Sensor",price:800},
+  {id:"smoke_detector",name:"Smoke Detector",price:1200},
+  {id:"siren",name:"Siren",price:600},
+  {id:"battery",name:"Battery",price:500},
+  {id:"cell",name:"Cell",price:200},
+  {id:"sos_button",name:"SOS Button",price:350},
+  {id:"panic_button",name:"Panic Button",price:350},
+  {id:"power_supply",name:"Power Supply",price:700},
+  {id:"wiring",name:"Wiring Charges",price:1000},
+  {id:"installation",name:"Installation Charges",price:1500},
+];
+const PROJECTS=["Bahria Mohlanwal","Bahria Orchard","Bahria EMC","Bahria Nasheman"];
+const fmt=n=>"₨ "+Number(n||0).toLocaleString("en-PK");
+const todayStr=()=>new Date().toISOString().slice(0,10);
+const curMonth=()=>new Date().toISOString().slice(0,7);
+const genId=()=>"ALM-"+String(Date.now()).slice(-6);
+
+function loadS(){return{
+  role:null,uid:null,
+  custs:JSON.parse(localStorage.getItem('alm_custs')||'[]'),
+  invoices:JSON.parse(localStorage.getItem('alm_invoices')||'[]'),
+  prices:JSON.parse(localStorage.getItem('alm_prices')||'null')||Object.fromEntries(ITEMS.map(i=>[i.id,i.price])),
+  users:JSON.parse(localStorage.getItem('alm_users')||'null')||[
+    {id:"U1",username:"superadmin",password:"super123",name:"Super Administrator",role:"superadmin",status:"active"},
+    {id:"U2",username:"admin",password:"admin123",name:"Administrator",role:"admin",status:"active"},
+    {id:"U3",username:"user1",password:"user123",name:"Field Technician",role:"user",status:"active"},
+    {id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"},
+  ],
+  imeis:JSON.parse(localStorage.getItem('alm_imeis')||'[]'),
+  projFilter:'all', invFilter:'all', imeiFilter:'all',
+};}
+let S=loadS();
+function sv(){
+  localStorage.setItem('alm_custs',JSON.stringify(S.custs));
+  localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
+  localStorage.setItem('alm_prices',JSON.stringify(S.prices));
+  localStorage.setItem('alm_users',JSON.stringify(S.users));
+  localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
+}
+
+if(S.custs.length===0){
+  S.custs=[
+    {id:"A001",name:"Bilal Khan",mobile:"0321-9876543",cnic:"35202-7654321-1",house:"45",street:"2",block:"C",project:"Bahria EMC",installDate:"2024-05-20",notes:"4 door contacts, backyard",status:"active"},
+    {id:"A002",name:"Sara Ali",mobile:"0333-4567890",cnic:"35202-1122334-2",house:"7",street:"1",block:"A",project:"Bahria Nasheman",installDate:"2024-01-10",notes:"",status:"inactive"},
+    {id:"A003",name:"Usman Tariq",mobile:"0345-1122334",cnic:"35202-5566778-3",house:"33",street:"8",block:"D",project:"Bahria Mohlanwal",installDate:"2024-07-01",notes:"Kitchen smoke detectors",status:"active"},
+  ];
+  S.invoices=[
+    {id:"ALM-001",custId:"A001",date:"2025-05-20",items:[{name:"Alarm Panel",qty:1,price:3500},{name:"Door Contact",qty:4,price:450},{name:"Installation Charges",qty:1,price:1500}],status:"unpaid",total:6800},
+    {id:"ALM-002",custId:"A003",date:"2025-06-01",items:[{name:"Smoke Detector",qty:2,price:1200},{name:"Wiring Charges",qty:1,price:1000}],status:"paid",total:3400},
+  ];
+  sv();
+}
+
+const HINTS={superadmin:"Hint: super123",admin:"Hint: admin123",user:"Hint: user123",pta:"Hint: pta123"};
+let selRoleVal="superadmin";
+function selRole(btn){
+  selRoleVal=btn.dataset.role;
+  document.querySelectorAll('.rtab').forEach(b=>{b.style.background=b===btn?'var(--or)':'transparent';b.style.color=b===btn?'#fff':'var(--mut)';});
+  document.getElementById('lhint').textContent=HINTS[selRoleVal]||'';
+}
+function doLogin(){
+  const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;
+  const user=S.users.find(x=>x.role===selRoleVal&&x.username===u&&x.password===p&&x.status==='active');
+  if(!user){document.getElementById('lerr').textContent="Wrong credentials!";return;}
+  S.role=user.role;S.uid=user.id;
+  document.getElementById('ls').style.display='none';
+  document.getElementById('hdr').style.display='flex';
+  document.getElementById('mc').style.display='block';
+  document.getElementById('bnav').style.display='flex';
+  document.getElementById('hbadge').textContent={superadmin:'Super Admin',admin:'Admin',user:'User',pta:'PTA'}[S.role];
+  document.getElementById('hgreet').textContent=user.name;
+  document.getElementById('sname').textContent=user.name;
+  if(S.role==='superadmin')document.getElementById('nb-users').style.display='flex';
+  if(S.role==='user'){document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';}
+  if(S.role==='pta'){
+    document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';
+    document.querySelectorAll('#bnav .nb').forEach(b=>b.style.display='none');
+    document.getElementById('nb-pta').style.display='flex';
+    document.getElementById('nb-settings').style.display='flex';
+    renderPrices();renderImeis();goTab('pta');
+    return;
+  }
+  document.getElementById('nb-pta').style.display='none';
+  renderPrices();buildProjPills();renderAll();goTab('dash');
+}
+function doLogout(){
+  S.role=null;S.uid=null;document.getElementById('lp').value='';document.getElementById('lerr').textContent='';
+  document.getElementById('ls').style.display='flex';document.getElementById('ls').classList.add('active');
+  document.getElementById('hdr').style.display='none';document.getElementById('mc').style.display='none';document.getElementById('bnav').style.display='none';
+  document.getElementById('nb-users').style.display='none';
+  document.querySelectorAll('#bnav .nb').forEach(b=>b.style.display='flex');
+  document.getElementById('nb-pta').style.display='none';
+  document.getElementById('nb-users').style.display='none';
+  document.getElementById('price-settings').style.display='block';document.getElementById('no-set').style.display='none';
+}
+
+const TABS=['dash','customers','invoices','reports','users','settings','pta'];
+function goTab(t){
+  TABS.forEach(x=>{
+    const s=document.getElementById('tab-'+x),ni=document.getElementById('ni-'+x),nl=document.getElementById('nl-'+x);
+    if(s)s.classList.toggle('active',x===t);
+    if(ni)ni.classList.toggle('act',x===t);
+    if(nl)nl.classList.toggle('act',x===t);
+  });
+  if(t==='dash')renderDash();
+  if(t==='customers')renderCusts();
+  if(t==='invoices')renderInvoices();
+  if(t==='reports')renderReports();
+  if(t==='users')renderUsers();
+  if(t==='pta')renderImeis();
+}
+
+function renderDash(){
+  const rev=S.invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.total,0);
+  const upaid=S.invoices.filter(i=>i.status==='unpaid').length;
+  document.getElementById('s-total').textContent=S.custs.length;
+  document.getElementById('s-active').textContent=S.custs.filter(c=>c.status==='active').length;
+  document.getElementById('s-rev').textContent=fmt(rev);
+  document.getElementById('s-inv').textContent=upaid;
+  const recent=S.invoices.slice(0,5);
+  document.getElementById('recent-list').innerHTML=recent.length===0?`<div style="color:var(--mut);text-align:center;padding:16px 0;">No invoices yet</div>`:
+    recent.map(inv=>{
+      const c=S.custs.find(x=>x.id===inv.custId);
+      return `<div class="c2" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="openInvDetail('${inv.id}')">
+        <div><div style="font-size:13px;font-weight:700;">${c?.name||'—'}</div>
+        <div style="color:var(--mut);font-size:11px;">${inv.id} · ${inv.date}</div></div>
+        <div style="text-align:right;"><div style="color:var(--or);font-size:14px;font-weight:800;">${fmt(inv.total)}</div>
+        <span class="bdg" style="background:${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${inv.status==='paid'?'var(--grn)':'var(--red)'};">${inv.status}</span></div>
+      </div>`;
+    }).join('');
+}
+
+function buildProjPills(){
+  const el=document.getElementById('proj-pills');if(!el)return;
+  const projs=['all',...new Set(S.custs.map(c=>c.project))];
+  el.innerHTML=projs.map(p=>`<button class="pill${p==='all'?' act':''}" onclick="setProjFilter('${p}',this)" style="white-space:nowrap;">${p==='all'?'All':p}</button>`).join('');
+}
+function setProjFilter(f,btn){
+  S.projFilter=f;
+  document.querySelectorAll('#proj-pills .pill').forEach(b=>b.classList.toggle('act',b===btn));
+  renderCusts();
+}
+
+function renderCusts(){
+  const q=(document.getElementById('csearch')||{}).value||'';
+  const list=S.custs.filter(c=>{
+    const mq=!q||c.name.toLowerCase().includes(q.toLowerCase())||c.mobile.includes(q)||c.house.includes(q)||c.block.toLowerCase().includes(q.toLowerCase())||(c.cnic||'').includes(q);
+    return mq&&(S.projFilter==='all'||c.project===S.projFilter);
+  });
+  document.getElementById('ccount').textContent=`(${list.length})`;
+  document.getElementById('custs-list').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:32px 0;">No customers found</div>`:
+    list.map(c=>`
+    <div class="card" style="cursor:pointer;" onclick="openCustDetail('${c.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="width:42px;height:42px;border-radius:11px;background:rgba(255,107,0,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🛡</div>
+          <div><div style="font-size:15px;font-weight:800;">${c.name}</div>
+          <div style="color:var(--mut);font-size:11px;">${c.mobile}</div>
+          <div style="color:var(--or);font-size:11px;font-weight:700;">📅 Installed: ${c.installDate}</div></div>
+        </div>
+        <span class="bdg" style="background:${c.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${c.status==='active'?'var(--grn)':'var(--red)'};">${c.status}</span>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);display:flex;gap:12px;flex-wrap:wrap;">
+        <span style="color:var(--mut);font-size:11px;">📍 ${c.project}</span>
+        <span style="color:var(--mut);font-size:11px;">Block ${c.block} · H# ${c.house}</span>
+      </div>
+    </div>`).join('');
+}
+
+function openCustDetail(id){
+  const c=S.custs.find(x=>x.id===id);if(!c)return;
+  const invs=S.invoices.filter(i=>i.custId===id);
+  document.getElementById('mtitle').textContent="Customer";
+  document.getElementById('mbody').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,107,0,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🛡</div>
+      <div><div style="font-size:17px;font-weight:900;">${c.name}</div>
+      <span class="bdg" style="background:${c.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${c.status==='active'?'var(--grn)':'var(--red)'};">${c.status}</span></div>
+    </div>
+    ${[['📞','Mobile',c.mobile],['🪪','CNIC',c.cnic||'—'],['🏠','Address',`H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}`],
+      ['📍','Project',c.project],['📅','Install Date',c.installDate],c.notes?['📝','Notes',c.notes]:null
+    ].filter(Boolean).map(([i,l,v])=>`
+      <div style="padding:8px 0;border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-start;">
+        <span>${i}</span><span style="color:var(--mut);font-size:12px;min-width:90px;">${l}</span>
+        <span style="font-size:13px;font-weight:600;">${v}</span>
+      </div>`).join('')}
+    <div style="margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="stl" style="margin:0;">Invoice History (${invs.length})</div>
+        <button class="btn bor bsm" onclick="closeM();openM('new-invoice','${id}')">+ Invoice</button>
+      </div>
+      ${invs.map(inv=>`<div class="c2" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="closeM();openInvDetail('${inv.id}')">
+        <div><div style="font-size:13px;font-weight:700;">${inv.id}</div><div style="color:var(--mut);font-size:11px;">${inv.date} · ${inv.items.length} items</div></div>
+        <div style="text-align:right;"><div style="color:var(--or);font-size:14px;font-weight:800;">${fmt(inv.total)}</div>
+        <button onclick="event.stopPropagation();toggleInv('${inv.id}')" style="background:none;border:1.5px solid ${inv.status==='paid'?'var(--grn)':'var(--red)'};border-radius:6px;padding:2px 8px;cursor:pointer;color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700;font-family:'Barlow',sans-serif;">${inv.status==='paid'?'✓ PAID':'UNPAID'}</button></div>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn bsm" style="background:rgba(255,107,0,.15);color:var(--or);border:none;" onclick="closeM();openM('edit-cust','${c.id}')">✏ Edit</button>
+      ${S.role==='superadmin'||S.role==='admin'?`<button class="btn bsm br" onclick="if(confirm('Delete?')){delCust('${c.id}')}">🗑 Delete</button>`:''}
+    </div>
+  `;
+  openM();
+}
+function delCust(id){S.custs=S.custs.filter(c=>c.id!==id);sv();closeM();renderCusts();renderDash();showToast("Deleted","error");}
+
+function setInvFilter(f,btn){
+  S.invFilter=f;
+  document.querySelectorAll('#tab-invoices .pill').forEach(b=>b.classList.toggle('act',b===btn));
+  renderInvoices();
+}
+function renderInvoices(){
+  const q=(document.getElementById('isearch')||{}).value||'';
+  const upaidTotal=S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.total,0);
+  const ub=document.getElementById('upaid-bar');
+  if(upaidTotal>0){ub.style.display='flex';document.getElementById('upaid-amt').textContent=fmt(upaidTotal);}else ub.style.display='none';
+  const list=S.invoices.filter(i=>{
+    const c=S.custs.find(x=>x.id===i.custId);
+    const mq=!q||i.id.toLowerCase().includes(q.toLowerCase())||(c&&c.name.toLowerCase().includes(q.toLowerCase()));
+    return mq&&(S.invFilter==='all'||i.status===S.invFilter);
+  });
+  document.getElementById('inv-list').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:32px 0;">No invoices</div>`:
+    list.map(inv=>{
+      const c=S.custs.find(x=>x.id===inv.custId);
+      return `<div class="card" style="cursor:pointer;border:1.5px solid ${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.3)'};" onclick="openInvDetail('${inv.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div><div style="font-size:14px;font-weight:700;">${c?.name||'—'}</div>
+          <div style="color:var(--mut);font-size:11px;">${inv.id} · ${inv.date}</div>
+          <div style="color:var(--mut);font-size:11px;">${inv.items.length} items · ${c?.project||'—'}</div></div>
+          <div style="text-align:right;"><div style="color:var(--or);font-size:16px;font-weight:900;">${fmt(inv.total)}</div>
+          <button onclick="event.stopPropagation();toggleInv('${inv.id}')" style="margin-top:4px;background:none;border:1.5px solid ${inv.status==='paid'?'var(--grn)':'var(--red)'};border-radius:6px;padding:3px 9px;cursor:pointer;color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700;font-family:'Barlow',sans-serif;">${inv.status==='paid'?'✓ PAID':'UNPAID'}</button></div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function openInvDetail(id){
+  const inv=S.invoices.find(i=>i.id===id);
+  const c=S.custs.find(x=>x.id===inv?.custId);
+  if(!inv||!c)return;
+  document.getElementById('mtitle').textContent="Invoice";
+  document.getElementById('mbody').innerHTML=`
+    <div style="border-radius:14px;overflow:hidden;border:1px solid var(--bdr);margin-bottom:14px;">
+      <div style="background:linear-gradient(135deg,var(--or),var(--ord));padding:16px 18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><div style="color:#fff;font-size:18px;font-weight:900;">AA Communication</div>
+          <div style="color:rgba(255,255,255,.7);font-size:11px;">Alarm Systems · Bahria Projects</div></div>
+          <div style="background:rgba(255,255,255,.2);padding:5px 11px;border-radius:7px;color:#fff;font-size:10px;font-weight:800;">INVOICE</div>
+        </div>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+          <div><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:1px;">Invoice No.</div><div style="font-size:13px;font-weight:700;">${inv.id}</div></div>
+          <div style="text-align:right;"><div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:1px;">Date</div><div style="font-size:13px;font-weight:700;">${inv.date}</div></div>
+        </div>
+        <div style="background:var(--card2);border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+          <div style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Customer</div>
+          <div style="font-size:14px;font-weight:700;">${c.name}</div>
+          <div style="color:var(--mut);font-size:12px;">${c.mobile}</div>
+          <div style="color:var(--mut);font-size:12px;">H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}</div>
+          <div style="color:var(--mut);font-size:12px;">${c.project}</div>
+          ${c.cnic?`<div style="color:var(--mut);font-size:12px;">CNIC: ${c.cnic}</div>`:''}
+        </div>
+        ${inv.items.map((item,i)=>`<div style="display:flex;justify-content:space-between;padding:8px 0;${i<inv.items.length-1?'border-bottom:1px solid var(--bdr)':''}">
+          <div><div style="font-size:13px;">${item.name}</div><div style="color:var(--mut);font-size:11px;">Qty ${item.qty} × ${fmt(item.price)}</div></div>
+          <div style="font-size:13px;font-weight:700;">${fmt(item.qty*item.price)}</div>
+        </div>`).join('')}
+        <div style="background:rgba(255,107,0,.12);border-radius:10px;padding:10px 12px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,107,0,.3);">
+          <span style="font-size:14px;font-weight:700;">Grand Total</span>
+          <span style="color:var(--or);font-size:20px;font-weight:900;">${fmt(inv.total)}</span>
+        </div>
+        <div style="text-align:center;padding:8px;border-radius:9px;margin-top:10px;background:${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:12px;font-weight:800;letter-spacing:2px;" id="inv-sbdg">${inv.status==='paid'?'✓ PAID':'⚠ UNPAID'}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:9px;margin-bottom:9px;">
+      <button class="btn bfl" style="background:#25D366;color:#fff;flex:1;" onclick="waInv('${inv.id}')">💬 WhatsApp</button>
+      <button class="btn bfl" style="background:var(--blu);color:#fff;flex:1;" onclick="printInv('${inv.id}')">🖨 Print</button>
+    </div>
+    <button class="btn bfl" style="background:transparent;border:1.5px solid ${inv.status==='paid'?'var(--red)':'var(--grn)'};color:${inv.status==='paid'?'var(--red)':'var(--grn)'};" id="tog-btn" onclick="toggleInv('${inv.id}');refreshBdg('${inv.id}')">
+      ${inv.status==='paid'?'Mark as Unpaid':'✓ Mark as Paid'}
+    </button>
+  `;
+  openM();
+}
+function refreshBdg(id){
+  const inv=S.invoices.find(i=>i.id===id);if(!inv)return;
+  const b=document.getElementById('inv-sbdg'),btn=document.getElementById('tog-btn');
+  if(b){b.style.background=inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)';b.style.color=inv.status==='paid'?'var(--grn)':'var(--red)';b.textContent=inv.status==='paid'?'✓ PAID':'⚠ UNPAID';}
+  if(btn){btn.style.borderColor=inv.status==='paid'?'var(--red)':'var(--grn)';btn.style.color=inv.status==='paid'?'var(--red)':'var(--grn)';btn.textContent=inv.status==='paid'?'Mark as Unpaid':'✓ Mark as Paid';}
+}
+function toggleInv(id){
+  S.invoices=S.invoices.map(i=>i.id===id?{...i,status:i.status==='paid'?'unpaid':'paid'}:i);
+  sv();renderInvoices();renderDash();showToast("Status updated! ✓");
+}
+
+function renderReports(){
+  const rev=S.invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.total,0);
+  const out=S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.total,0);
+  const cm=curMonth();
+  const mnth=S.invoices.filter(i=>i.status==='paid'&&i.date.startsWith(cm)).reduce((s,i)=>s+i.total,0);
+  document.getElementById('r-rev').textContent=fmt(rev);
+  document.getElementById('r-out').textContent=fmt(out);
+  document.getElementById('r-inst').textContent=S.custs.length;
+  document.getElementById('r-mnth').textContent=fmt(mnth);
+  const maxC=Math.max(...PROJECTS.map(p=>S.custs.filter(c=>c.project===p).length),1);
+  document.getElementById('proj-report').innerHTML=PROJECTS.map(p=>{
+    const count=S.custs.filter(c=>c.project===p).length;
+    return `<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">${p}</span><span style="color:var(--or);font-size:12px;font-weight:800;">${count}</span></div><div class="pb"><div class="pf" style="width:${(count/maxC)*100}%"></div></div></div>`;
+  }).join('');
+  const tot=S.invoices.length,pc=S.invoices.filter(i=>i.status==='paid').length,uc=S.invoices.filter(i=>i.status==='unpaid').length;
+  document.getElementById('inv-summary').innerHTML=[["Total",tot,"var(--txt)"],["Paid",pc,"var(--grn)"],["Unpaid",uc,"var(--red)"]].map(([l,v,c])=>`<div style="text-align:center;"><div style="color:${c};font-size:28px;font-weight:900;">${v}</div><div style="color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:1px;">${l}</div></div>`).join('');
+}
+
+// New invoice form
+let iQty={};
+function showNewInvoice(preCust){
+  iQty={};
+  document.getElementById('mtitle').textContent="New Invoice";
+  const custOpts=S.custs.map(c=>`<option value="${c.id}"${c.id===preCust?' selected':''}>${c.name} — ${c.project}</option>`).join('');
+  document.getElementById('mbody').innerHTML=`
+    <div class="fw"><label class="fl">Customer</label><select class="fi" id="ic">${custOpts}</select></div>
+    <div class="stl" style="margin-top:4px;">Select Items & Quantities</div>
+    <div id="items-list"></div>
+    <div style="background:rgba(255,107,0,.12);border-radius:11px;padding:11px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,107,0,.3);">
+      <span style="font-size:14px;font-weight:700;">Grand Total</span>
+      <span style="color:var(--or);font-size:20px;font-weight:900;" id="gtotal">₨ 0</span>
+    </div>
+    <div style="display:flex;gap:9px;">
+      <button class="btn bo bfl" onclick="closeM()">Cancel</button>
+      <button class="btn bor bfl" onclick="saveInvoice()">🧾 Create</button>
+    </div>
+  `;
+  renderItems();
+}
+function renderItems(){
+  document.getElementById('items-list').innerHTML=ITEMS.map(item=>`
+    <div style="background:var(--card2);border-radius:10px;padding:9px 11px;margin-bottom:6px;border:1.5px solid ${(iQty[item.id]||0)>0?'var(--or)':'var(--bdr)'};display:flex;justify-content:space-between;align-items:center;" id="ir-${item.id}">
+      <div><div style="font-size:13px;">${item.name}</div>
+      <div style="color:var(--or);font-size:11px;font-weight:700;" id="ip-${item.id}">${fmt(S.prices[item.id]||item.price)}</div></div>
+      <div class="qty-ctrl">
+        <button class="qb qm" onclick="chgQ('${item.id}',-1,${item.price})">−</button>
+        <span class="qn" id="qn-${item.id}">0</span>
+        <button class="qb qp" onclick="chgQ('${item.id}',1,${item.price})">+</button>
+      </div>
+    </div>`).join('');
+}
+function chgQ(id,d,base){
+  iQty[id]=Math.max(0,(iQty[id]||0)+d);
+  const p=S.prices[id]||base,q=iQty[id];
+  const qel=document.getElementById('qn-'+id),rel=document.getElementById('ir-'+id),pel=document.getElementById('ip-'+id);
+  if(qel)qel.textContent=q;
+  if(rel)rel.style.borderColor=q>0?'var(--or)':'var(--bdr)';
+  if(pel)pel.innerHTML=`${fmt(p)}${q>0?` <span style="color:var(--mut)">× ${q} = ${fmt(q*p)}</span>`:''}`;
+  const tot=ITEMS.reduce((s,i)=>s+(iQty[i.id]||0)*(S.prices[i.id]||i.price),0);
+  const ge=document.getElementById('gtotal');if(ge)ge.textContent=fmt(tot);
+}
+function saveInvoice(){
+  const custId=document.getElementById('ic')?.value;
+  const sel=ITEMS.filter(i=>(iQty[i.id]||0)>0).map(i=>({name:i.name,qty:iQty[i.id],price:S.prices[i.id]||i.price}));
+  if(!custId||!sel.length){showToast("Customer chunein aur items select karein!","error");return;}
+  const total=sel.reduce((s,i)=>s+i.qty*i.price,0);
+  const inv={id:genId(),custId,date:todayStr(),items:sel,status:"unpaid",total};
+  S.invoices.unshift(inv);sv();closeM();renderAll();showToast("Invoice created! ✓");
+  setTimeout(()=>openInvDetail(inv.id),300);
+}
+
+function waInv(id){
+  const inv=S.invoices.find(i=>i.id===id);const c=S.custs.find(x=>x.id===inv?.custId);if(!inv||!c)return;
+  const msg=`*AA Communication — Alarm Invoice*\n\n${inv.id} · ${inv.date}\n\n*Customer:* ${c.name}\n*Mobile:* ${c.mobile}\n*Address:* H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}\n*Project:* ${c.project}\n${c.cnic?'*CNIC:* '+c.cnic+'\n':''}\n*Items:*\n${inv.items.map(i=>`${i.name} × ${i.qty} = ${fmt(i.qty*i.price)}`).join('\n')}\n\n*Grand Total: ${fmt(inv.total)}*\n*Status: ${inv.status.toUpperCase()}*\n\nThank you for choosing AA Communication! 🙏`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+function printInv(id){
+  const inv=S.invoices.find(i=>i.id===id);const c=S.custs.find(x=>x.id===inv?.custId);if(!inv||!c)return;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Invoice ${inv.id}</title><style>body{font-family:Arial,sans-serif;padding:24px;max-width:500px;margin:0 auto;}.hdr{background:#FF6B00;color:#fff;padding:16px;border-radius:8px;margin-bottom:16px;}h2{margin:0;font-size:18px;}p{margin:3px 0;font-size:12px;}.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:13px;}.stat{display:inline-block;padding:4px 12px;border-radius:5px;font-weight:bold;background:${inv.status==='paid'?'#dcfce7':'#fee2e2'};color:${inv.status==='paid'?'#16a34a':'#dc2626'};}.total{font-size:18px;font-weight:bold;color:#FF6B00;text-align:right;margin-top:10px;}.footer{margin-top:20px;color:#999;font-size:11px;text-align:center;}</style></head><body>
+  <div class="hdr"><h2>AA Communication</h2><p>Alarm Systems — Bahria Projects</p></div>
+  <div style="display:flex;justify-content:space-between;margin-bottom:14px;align-items:center;">
+    <div><div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:1px;">Invoice No.</div><b style="font-size:15px;">${inv.id}</b><div style="color:#666;font-size:12px;">Date: ${inv.date}</div></div>
+    <span class="stat">${inv.status.toUpperCase()}</span>
+  </div>
+  <div style="background:#f8f8f8;padding:12px;border-radius:8px;margin-bottom:14px;">
+    <div style="font-size:10px;color:#999;text-transform:uppercase;margin-bottom:6px;">Customer</div>
+    <b style="font-size:15px;">${c.name}</b><br>📞 ${c.mobile}<br>🏠 H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}<br>📍 ${c.project}${c.cnic?'<br>🪪 '+c.cnic:''}
+  </div>
+  ${inv.items.map(i=>`<div class="row"><div>${i.name}<div style="color:#999;font-size:11px;">Qty ${i.qty} × ${fmt(i.price)}</div></div><b>${fmt(i.qty*i.price)}</b></div>`).join('')}
+  <div class="total">Grand Total: ${fmt(inv.total)}</div>
+  <div class="footer"><p>Thank you for choosing AA Communication Pvt. Ltd.</p></div>
+  <script>window.print();<\/script></body></html>`);
+  w.document.close();
+}
+
+function renderUsers(){
+  if(S.role!=='superadmin')return;
+  const el=document.getElementById('users-list');if(!el)return;
+  el.innerHTML=S.users.map(u=>`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="width:38px;height:38px;border-radius:9px;background:${u.role==='superadmin'?'rgba(255,107,0,.2)':u.role==='admin'?'rgba(59,130,246,.2)':'rgba(34,197,94,.2)'};display:flex;align-items:center;justify-content:center;font-size:17px;">${u.role==='superadmin'?'👑':u.role==='admin'?'🛡':'👤'}</div>
+        <div><div style="font-size:14px;font-weight:700;">${u.name}</div><div style="color:var(--mut);font-size:11px;">@${u.username}</div></div>
+      </div>
+      <span class="bdg" style="background:${u.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${u.status==='active'?'var(--grn)':'var(--red)'};">${u.status}</span>
+    </div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;">
+      <button class="btn bsm" style="background:rgba(255,107,0,.15);color:var(--or);border:none;" onclick="openM('edit-user','${u.id}')">✏ Edit</button>
+      <button class="btn bsm" style="background:rgba(245,158,11,.15);color:var(--ylw);border:none;" onclick="openM('chg-pass','${u.id}')">🔑 Password</button>
+      ${u.id!==S.uid?`<button class="btn bsm" style="background:${u.status==='active'?'rgba(239,68,68,.15)':'rgba(34,197,94,.15)'};color:${u.status==='active'?'var(--red)':'var(--grn)'};border:none;" onclick="togUsr('${u.id}')">${u.status==='active'?'⏸ Deactivate':'▶ Activate'}</button>`:''}
+      ${u.id!==S.uid&&u.role!=='superadmin'?`<button class="btn bsm br" onclick="if(confirm('Delete?'))delUsr('${u.id}')">🗑</button>`:''}
+    </div>
+  </div>`).join('');
+}
+function togUsr(id){S.users=S.users.map(u=>u.id===id?{...u,status:u.status==='active'?'inactive':'active'}:u);sv();renderUsers();showToast("Updated!");}
+function delUsr(id){S.users=S.users.filter(u=>u.id!==id);sv();renderUsers();showToast("Deleted","error");}
+
+function renderPrices(){
+  const el=document.getElementById('price-list');if(!el)return;
+  el.innerHTML=ITEMS.map(i=>`<div class="c2" style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;">${i.name}</span><span style="color:var(--or);font-size:13px;font-weight:700;">${fmt(S.prices[i.id]||i.price)}</span></div>`).join('');
+}
+let ePrices=false;
+function toggleEditPrices(){
+  ePrices=!ePrices;
+  const btn=document.getElementById('epr-btn'),el=document.getElementById('price-list');
+  if(ePrices){
+    btn.textContent="💾 Save";btn.style.background='rgba(34,197,94,.2)';btn.style.color='var(--grn)';
+    el.innerHTML=ITEMS.map(i=>`<div class="c2" style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;">${i.name}</span><div style="display:flex;align-items:center;gap:4px;"><span style="color:var(--mut);font-size:11px;">₨</span><input type="number" value="${S.prices[i.id]||i.price}" onchange="S.prices['${i.id}']=Number(this.value);sv();" style="width:80px;padding:5px 8px;border-radius:8px;text-align:right;background:var(--bg);border:1.5px solid var(--or);color:var(--or);font-size:13px;font-family:'Barlow',sans-serif;outline:none;font-weight:700;"/></div></div>`).join('');
+  } else {
+    btn.textContent="Edit Prices";btn.style.background='rgba(255,107,0,.2)';btn.style.color='var(--or)';
+    sv();renderPrices();showToast("Prices saved! ✓");
+  }
+}
+
+function openM(type,extra){
+  if(type==='add-cust')showAddCust();
+  else if(type==='edit-cust')showEditCust(extra);
+  else if(type==='new-invoice')showNewInvoice(extra);
+  else if(type==='add-user')showAddUser();
+  else if(type==='edit-user')showEditUser(extra);
+  else if(type==='chg-pass')showChgPass(extra);
+  document.getElementById('mov').classList.add('open');
+}
+function closeM(){document.getElementById('mov').classList.remove('open');}
+function closeOutside(e){if(e.target===document.getElementById('mov'))closeM();}
+
+function showAddCust(){
+  document.getElementById('mtitle').textContent="Add Alarm Customer";
+  document.getElementById('mbody').innerHTML=`
+    <div id="fe" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin-bottom:10px;"></div>
+    <div class="fw"><label class="fl">Customer Name *</label><input class="fi" id="fn" placeholder="Full name"/></div>
+    <div class="fw"><label class="fl">Mobile *</label><input class="fi" id="fm" placeholder="0300-0000000" type="tel"/></div>
+    <div class="fw"><label class="fl">CNIC</label><input class="fi" id="fcn" placeholder="35202-XXXXXXX-X"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="fw"><label class="fl">House # *</label><input class="fi" id="fh" placeholder="12"/></div>
+      <div class="fw"><label class="fl">Street #</label><input class="fi" id="fs" placeholder="5"/></div>
+    </div>
+    <div class="fw"><label class="fl">Block *</label><input class="fi" id="fb" placeholder="B"/></div>
+    <div class="fw"><label class="fl">Project</label>
+      <select class="fi" id="fpr">${PROJECTS.map(p=>`<option>${p}</option>`).join('')}</select>
+    </div>
+    <div class="fw"><label class="fl">Installation Date</label><input class="fi" id="fid" type="date" value="${todayStr()}"/></div>
+    <div class="fw"><label class="fl">Notes</label><input class="fi" id="fno" placeholder="Optional…"/></div>
+    <div style="display:flex;gap:9px;">
+      <button class="btn bo bfl" onclick="closeM()">Cancel</button>
+      <button class="btn bor bfl" onclick="saveCust()">✓ Save</button>
+    </div>
+  `;
+}
+function saveCust(){
+  const name=document.getElementById('fn').value.trim(),mobile=document.getElementById('fm').value.trim();
+  const house=document.getElementById('fh').value.trim(),block=document.getElementById('fb').value.trim();
+  const fe=document.getElementById('fe');
+  if(!name||!mobile||!house||!block){fe.textContent="Name, Mobile, House, Block required!";fe.style.display="block";return;}
+  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,cnic:document.getElementById('fcn').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),status:"active"});
+  sv();closeM();renderCusts();renderDash();buildProjPills();showToast("Customer added! ✓");
+}
+function showEditCust(id){
+  const c=S.custs.find(x=>x.id===id);if(!c)return;
+  document.getElementById('mtitle').textContent="Edit Customer";
+  document.getElementById('mbody').innerHTML=`
+    <div class="fw"><label class="fl">Name</label><input class="fi" id="en" value="${c.name}"/></div>
+    <div class="fw"><label class="fl">Mobile</label><input class="fi" id="em" value="${c.mobile}"/></div>
+    <div class="fw"><label class="fl">CNIC</label><input class="fi" id="ec" value="${c.cnic||''}"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="fw"><label class="fl">House #</label><input class="fi" id="eh" value="${c.house}"/></div>
+      <div class="fw"><label class="fl">Street #</label><input class="fi" id="es" value="${c.street||''}"/></div>
+    </div>
+    <div class="fw"><label class="fl">Block</label><input class="fi" id="eb" value="${c.block}"/></div>
+    <div class="fw"><label class="fl">Project</label><select class="fi" id="ep">${PROJECTS.map(p=>`<option${c.project===p?' selected':''}>${p}</option>`).join('')}</select></div>
+    <div class="fw"><label class="fl">Install Date</label><input class="fi" id="eid" type="date" value="${c.installDate}"/></div>
+    <div class="fw"><label class="fl">Status</label><select class="fi" id="est"><option value="active"${c.status==='active'?' selected':''}>Active</option><option value="inactive"${c.status==='inactive'?' selected':''}>Inactive</option></select></div>
+    <div class="fw"><label class="fl">Notes</label><input class="fi" id="eno" value="${c.notes||''}"/></div>
+    <div style="display:flex;gap:9px;">
+      <button class="btn bo bfl" onclick="closeM()">Cancel</button>
+      <button class="btn bor bfl" onclick="updCust('${id}')">✓ Update</button>
+    </div>
+  `;
+}
+function updCust(id){
+  S.custs=S.custs.map(c=>c.id===id?{...c,name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,cnic:document.getElementById('ec').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim()}:c);
+  sv();closeM();renderCusts();renderDash();showToast("Updated! ✓");
+}
+function showAddUser(){
+  document.getElementById('mtitle').textContent="Add User";
+  document.getElementById('mbody').innerHTML=`
+    <div id="ufe" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin-bottom:10px;"></div>
+    <div class="fw"><label class="fl">Full Name *</label><input class="fi" id="un" placeholder="Full name"/></div>
+    <div class="fw"><label class="fl">Username *</label><input class="fi" id="uu" placeholder="username"/></div>
+    <div class="fw"><label class="fl">Password *</label><input class="fi" id="upw" type="password" placeholder="Min 6 chars"/></div>
+    <div class="fw"><label class="fl">Role</label><select class="fi" id="ur"><option value="admin">Admin</option><option value="user">Technician/User</option></select></div>
+    <div style="display:flex;gap:9px;"><button class="btn bo bfl" onclick="closeM()">Cancel</button><button class="btn bor bfl" onclick="saveUser()">✓ Add</button></div>
+  `;
+}
+function saveUser(){
+  const n=document.getElementById('un').value.trim(),u=document.getElementById('uu').value.trim(),p=document.getElementById('upw').value;
+  const e=document.getElementById('ufe');
+  if(!n||!u||!p){e.textContent="All fields required!";e.style.display="block";return;}
+  if(p.length<6){e.textContent="Min 6 characters!";e.style.display="block";return;}
+  if(S.users.find(x=>x.username===u)){e.textContent="Username exists!";e.style.display="block";return;}
+  S.users.push({id:"U"+String(Date.now()).slice(-5),username:u,password:p,name:n,role:document.getElementById('ur').value,status:"active"});
+  sv();closeM();renderUsers();showToast("User added! ✓");
+}
+function showEditUser(id){
+  const u=S.users.find(x=>x.id===id);if(!u)return;
+  document.getElementById('mtitle').textContent="Edit User";
+  document.getElementById('mbody').innerHTML=`
+    <div class="fw"><label class="fl">Full Name</label><input class="fi" id="eun" value="${u.name}"/></div>
+    <div class="fw"><label class="fl">Username</label><input class="fi" id="euu" value="${u.username}"/></div>
+    <div class="fw"><label class="fl">Role</label><select class="fi" id="eur" ${u.role==='superadmin'?'disabled':''}>
+      <option value="admin"${u.role==='admin'?' selected':''}>Admin</option>
+      <option value="user"${u.role==='user'?' selected':''}>User</option>
+      ${u.role==='superadmin'?'<option value="superadmin" selected>Super Admin</option>':''}
+    </select></div>
+    <div style="display:flex;gap:9px;"><button class="btn bo bfl" onclick="closeM()">Cancel</button><button class="btn bor bfl" onclick="updUsr('${id}')">✓ Save</button></div>
+  `;
+}
+function updUsr(id){
+  S.users=S.users.map(u=>u.id===id?{...u,name:document.getElementById('eun').value.trim()||u.name,username:document.getElementById('euu').value.trim()||u.username,role:document.getElementById('eur').value}:u);
+  sv();closeM();renderUsers();showToast("Updated! ✓");
+}
+function showChgPass(id){
+  const u=S.users.find(x=>x.id===id);if(!u)return;
+  document.getElementById('mtitle').textContent="Change Password";
+  document.getElementById('mbody').innerHTML=`
+    <div class="c2" style="margin-bottom:14px;"><div style="font-size:14px;font-weight:700;">${u.name}</div><div style="color:var(--mut);font-size:12px;">@${u.username}</div></div>
+    <div id="cpe" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin-bottom:10px;"></div>
+    <div class="fw"><label class="fl">New Password *</label><input class="fi" id="cp1" type="password" placeholder="Min 6 chars"/></div>
+    <div class="fw"><label class="fl">Confirm Password *</label><input class="fi" id="cp2" type="password" placeholder="Repeat"/></div>
+    <div style="display:flex;gap:9px;"><button class="btn bo bfl" onclick="closeM()">Cancel</button><button class="btn bfl" style="background:rgba(245,158,11,.2);color:var(--ylw);border:1.5px solid var(--ylw);" onclick="savePass('${id}')">🔑 Change</button></div>
+  `;
+}
+function savePass(id){
+  const p1=document.getElementById('cp1').value,p2=document.getElementById('cp2').value;
+  const e=document.getElementById('cpe');
+  if(p1.length<6){e.textContent="Min 6 chars!";e.style.display="block";return;}
+  if(p1!==p2){e.textContent="Passwords don't match!";e.style.display="block";return;}
+  S.users=S.users.map(u=>u.id===id?{...u,password:p1}:u);
+  sv();closeM();showToast("Password changed! ✓");
+}
+
+// ===== PTA IMEI MODULE =====
+function imeiPillsHTML(){
+  const filters=[['all','All'],['pending','Pending'],['approved','Approved'],['rejected','Rejected']];
+  return filters.map(([f,l])=>`<button class="pill${S.imeiFilter===f?' act':''}" onclick="setImeiFilter('${f}',this)">${l}</button>`).join('');
+}
+function setImeiFilter(f,btn){
+  S.imeiFilter=f;
+  document.querySelectorAll('#pta-pills .pill').forEach(b=>b.classList.toggle('act',b===btn));
+  renderImeis();
+}
+function renderPtaControls(){
+  const el=document.getElementById('pta-controls');if(!el)return;
+  if(S.role==='pta'){
+    el.innerHTML=`
+      <div class="card" style="margin-bottom:10px;">
+        <div class="stl" style="margin-bottom:10px;">Add Single IMEI</div>
+        <div class="fw"><label class="fl">IMEI Number *</label><input class="fi" id="pi-imei" placeholder="15-digit IMEI" maxlength="20"/></div>
+        <div class="fw"><label class="fl">Payable Amount (₨) *</label><input class="fi" id="pi-amt" type="number" placeholder="0"/></div>
+        <div id="pi-err" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin-bottom:10px;"></div>
+        <button class="btn bor bfl" onclick="addSingleImei()">+ Add for Approval</button>
+      </div>
+      <div class="card" style="margin-bottom:10px;">
+        <div class="stl" style="margin-bottom:10px;">Upload Excel (IMEI + Amount)</div>
+        <div style="color:var(--mut);font-size:11px;margin-bottom:8px;">Columns: IMEI, Amount (first sheet, row 1 = headers)</div>
+        <input class="fi" type="file" id="pi-file" accept=".xlsx,.xls,.csv"/>
+        <div id="pi-ferr" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin:10px 0;"></div>
+        <button class="btn bg bfl" style="margin-top:10px;" onclick="uploadImeiExcel()">📤 Upload & Submit</button>
+      </div>`;
+  } else if(S.role==='admin'||S.role==='superadmin'){
+    el.innerHTML=`<div class="c2" style="color:var(--mut);font-size:12px;">Review and approve/reject IMEI submissions from PTA users below.</div>`;
+  } else {
+    el.innerHTML='';
+  }
+}
+function genImeiId(){return "IM"+String(Date.now()).slice(-7)+Math.floor(Math.random()*100);}
+function findDupImei(imei){return S.imeis.find(x=>x.imei===imei&&x.status!=='rejected');}
+function addSingleImei(){
+  const imei=document.getElementById('pi-imei').value.trim();
+  const amt=Number(document.getElementById('pi-amt').value);
+  const e=document.getElementById('pi-err');
+  e.style.display='none';
+  if(!imei||!/^[0-9]{14,17}$/.test(imei)){e.textContent="Valid IMEI required (14-17 digits)!";e.style.display="block";return;}
+  if(!amt||amt<=0){e.textContent="Valid payable amount required!";e.style.display="block";return;}
+  if(findDupImei(imei)){e.textContent="⚠ Duplicate IMEI! Already exists in records.";e.style.display="block";return;}
+  S.imeis.unshift({id:genImeiId(),imei,amount:amt,status:'pending',addedBy:S.uid,addedByName:(S.users.find(u=>u.id===S.uid)||{}).name||'',date:todayStr()});
+  sv();document.getElementById('pi-imei').value='';document.getElementById('pi-amt').value='';
+  renderImeis();showToast("IMEI submitted for approval! ✓");
+}
+function uploadImeiExcel(){
+  const f=document.getElementById('pi-file').files[0];
+  const e=document.getElementById('pi-ferr');
+  e.style.display='none';
+  if(!f){e.textContent="Select a file first!";e.style.display="block";return;}
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){e.textContent="No data found in file!";e.style.display="block";return;}
+      let added=0,dup=0,invalid=0;
+      const dupList=[];
+      rows.forEach(r=>{
+        const keys=Object.keys(r);
+        const imeiKey=keys.find(k=>k.toLowerCase().replace(/\s/g,'').includes('imei'))||keys[0];
+        const amtKey=keys.find(k=>k.toLowerCase().replace(/\s/g,'').includes('amount')||k.toLowerCase().replace(/\s/g,'').includes('payable'))||keys[1];
+        let imei=String(r[imeiKey]||'').trim().replace(/\.0$/,'');
+        const amt=Number(r[amtKey]);
+        if(!/^[0-9]{14,17}$/.test(imei)||!amt||amt<=0){invalid++;return;}
+        if(findDupImei(imei)||S._batchImeis?.has(imei)){dup++;dupList.push(imei);return;}
+        if(!S._batchImeis)S._batchImeis=new Set();
+        S._batchImeis.add(imei);
+        S.imeis.unshift({id:genImeiId(),imei,amount:amt,status:'pending',addedBy:S.uid,addedByName:(S.users.find(u=>u.id===S.uid)||{}).name||'',date:todayStr()});
+        added++;
+      });
+      delete S._batchImeis;
+      sv();renderImeis();
+      document.getElementById('pi-file').value='';
+      let msg=`${added} IMEI(s) submitted for approval!`;
+      if(dup>0)msg+=` ⚠ ${dup} duplicate(s) skipped.`;
+      if(invalid>0)msg+=` ${invalid} invalid row(s) skipped.`;
+      showToast(msg,dup>0||invalid>0?"warn":"success");
+    }catch(err){
+      e.textContent="Error reading file: "+err.message;e.style.display="block";
+    }
+  };
+  reader.readAsArrayBuffer(f);
+}
+function imeiAction(id,action){
+  S.imeis=S.imeis.map(x=>x.id===id?{...x,status:action,reviewedBy:(S.users.find(u=>u.id===S.uid)||{}).name||'',reviewDate:todayStr()}:x);
+  sv();renderImeis();showToast(action==='approved'?"IMEI approved! ✓":"IMEI rejected","error");
+}
+function renderImeis(){
+  const pillsEl=document.getElementById('pta-pills');
+  if(pillsEl)pillsEl.innerHTML=imeiPillsHTML();
+  renderPtaControls();
+  const q=(document.getElementById('pta-search')||{}).value||'';
+  document.getElementById('pta-total').textContent=S.imeis.length;
+  document.getElementById('pta-pending').textContent=S.imeis.filter(x=>x.status==='pending').length;
+  let list=S.imeis;
+  if(S.role==='pta')list=list.filter(x=>x.addedBy===S.uid);
+  list=list.filter(x=>{
+    const mq=!q||x.imei.includes(q);
+    return mq&&(S.imeiFilter==='all'||x.status===S.imeiFilter);
+  });
+  const canReview=S.role==='admin'||S.role==='superadmin';
+  document.getElementById('imei-list').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:32px 0;">No IMEI records</div>`:
+    list.map(x=>{
+      const stColor=x.status==='approved'?'var(--grn)':x.status==='rejected'?'var(--red)':'var(--ylw)';
+      const stBg=x.status==='approved'?'rgba(34,197,94,.2)':x.status==='rejected'?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)';
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div><div style="font-size:14px;font-weight:800;font-family:monospace;">${x.imei}</div>
+          <div style="color:var(--or);font-size:13px;font-weight:700;margin-top:2px;">${fmt(x.amount)}</div>
+          <div style="color:var(--mut);font-size:11px;margin-top:3px;">By ${x.addedByName||'—'} · ${x.date}</div></div>
+          <span class="bdg" style="background:${stBg};color:${stColor};">${x.status}</span>
+        </div>
+        ${canReview&&x.status==='pending'?`<div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn bsm bg bfl" onclick="imeiAction('${x.id}','approved')">✓ Approve</button>
+          <button class="btn bsm br bfl" onclick="imeiAction('${x.id}','rejected')">✕ Reject</button>
+        </div>`:''}
+        ${x.reviewedBy?`<div style="color:var(--mut);font-size:10px;margin-top:6px;">Reviewed by ${x.reviewedBy} · ${x.reviewDate}</div>`:''}
+      </div>`;
+    }).join('');
+}
+
+function showToast(msg,type="success"){
+  const t=document.getElementById('toast');t.textContent=msg;t.style.display="block";
+  t.style.background=type==="success"?"#22C55E":type==="error"?"#EF4444":type==="warn"?"#D97706":"#F59E0B";
+  t.style.color="#fff";setTimeout(()=>t.style.display="none",2800);
+}
+function renderAll(){if(S.role==='pta'){renderImeis();return;}renderDash();renderCusts();renderInvoices();renderReports();if(S.role==='superadmin')renderUsers();}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
