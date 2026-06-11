@@ -267,6 +267,10 @@ function loadS(){return{
   projFilter:'all', invFilter:'all', imeiFilter:'all',
 };}
 let S=loadS();
+if(!S.users.find(u=>u.role==='pta')){
+  S.users.push({id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"});
+  sv();
+}
 function sv(){
   localStorage.setItem('alm_custs',JSON.stringify(S.custs));
   localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
@@ -289,11 +293,15 @@ if(S.custs.length===0){
 }
 
 const HINTS={superadmin:"Hint: super123",admin:"Hint: admin123",user:"Hint: user123",pta:"Hint: pta123"};
+const DEFAULT_USERNAMES={superadmin:"superadmin",admin:"admin",user:"user1",pta:"pta1"};
 let selRoleVal="superadmin";
 function selRole(btn){
   selRoleVal=btn.dataset.role;
   document.querySelectorAll('.rtab').forEach(b=>{b.style.background=b===btn?'var(--or)':'transparent';b.style.color=b===btn?'#fff':'var(--mut)';});
   document.getElementById('lhint').textContent=HINTS[selRoleVal]||'';
+  document.getElementById('lu').value=DEFAULT_USERNAMES[selRoleVal]||'';
+  document.getElementById('lp').value='';
+  document.getElementById('lerr').textContent='';
 }
 function doLogin(){
   const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;
@@ -317,7 +325,7 @@ function doLogin(){
     renderPrices();renderImeis();goTab('pta');
     return;
   }
-  document.getElementById('nb-pta').style.display='none';
+  document.getElementById('nb-pta').style.display=(S.role==='admin'||S.role==='superadmin')?'flex':'none';
   renderPrices();buildProjPills();renderAll();goTab('dash');
 }
 function doLogout(){
