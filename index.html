@@ -11,6 +11,8 @@
 <link rel="manifest" href="manifest.json"/>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{--or:#EA580C;--ord:#C2410C;--bg:#FFF7F0;--card:#FFFFFF;--card2:#FEF3E8;--bdr:#FDBA74;--txt:#1C0F00;--mut:#78716C;--dim:#FDE8D0;--grn:#16A34A;--red:#DC2626;--ylw:#D97706;--blu:#2563EB;}
@@ -106,12 +108,12 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
       <div style="font-size:21px;font-weight:900;" id="hgreet">Admin</div>
     </div>
     <div class="sgrid">
-      <div class="sc"><div class="sl">Total Customers</div><div class="sv" style="color:var(--or);" id="s-total">0</div></div>
-      <div class="sc"><div class="sl">Active</div><div class="sv" style="color:var(--grn);" id="s-active">0</div></div>
+      <div class="sc" style="cursor:pointer;" onclick="goTab('customers')"><div class="sl">Total Customers</div><div class="sv" style="color:var(--or);" id="s-total">0</div></div>
+      <div class="sc" style="cursor:pointer;" onclick="goTab('customers');setProjFilter('all',document.querySelector('#proj-pills .pill'));document.getElementById('csearch').value='';renderCusts()"><div class="sl">Active</div><div class="sv" style="color:var(--grn);" id="s-active">0</div></div>
     </div>
     <div class="sgrid" style="margin-bottom:16px;">
-      <div class="sc"><div class="sl">Total Revenue</div><div class="sv" style="color:var(--grn);font-size:14px;" id="s-rev">₨0</div></div>
-      <div class="sc"><div class="sl">Unpaid Invoices</div><div class="sv" style="color:var(--red);" id="s-inv">0</div></div>
+      <div class="sc" style="cursor:pointer;" onclick="goTab('invoices');setInvFilter('paid',document.querySelectorAll('#tab-invoices .pill')[1])"><div class="sl">Total Revenue</div><div class="sv" style="color:var(--grn);font-size:14px;" id="s-rev">₨0</div></div>
+      <div class="sc" style="cursor:pointer;" onclick="goTab('invoices');setInvFilter('unpaid',document.querySelectorAll('#tab-invoices .pill')[2])"><div class="sl">Unpaid Invoices</div><div class="sv" style="color:var(--red);" id="s-inv">0</div></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
       <button class="card" onclick="openM('add-cust')" style="cursor:pointer;text-align:left;border:1px solid var(--bdr);"><div style="font-size:22px;margin-bottom:6px;">👤</div><span style="font-size:13px;font-weight:700;">Add Customer</span></button>
@@ -177,6 +179,26 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
     <div id="users-list"></div>
   </div>
 
+  <!-- ACTIVITY -->
+  <div id="tab-activity" class="screen">
+    <div style="font-size:20px;font-weight:900;margin-bottom:14px;">User Activity</div>
+    <div class="fw"><label class="fl">Filter by User</label>
+      <select class="fi" id="act-user" onchange="renderActivity()">
+        <option value="all">All Users</option>
+      </select>
+    </div>
+    <div class="fw"><label class="fl">Filter by Type</label>
+      <select class="fi" id="act-type" onchange="renderActivity()">
+        <option value="all">All</option>
+        <option value="installation">Installation</option>
+        <option value="complaint">Complaint / Service</option>
+      </select>
+    </div>
+    <div id="activity-summary"></div>
+    <div class="stl" style="margin-top:14px;">Invoices</div>
+    <div id="activity-list"></div>
+  </div>
+
   <!-- SETTINGS -->
   <div id="tab-settings" class="screen">
     <div style="font-size:20px;font-weight:900;margin-bottom:16px;">Settings</div>
@@ -195,6 +217,7 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
     </div>
     <div id="no-set" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:11px;padding:12px;margin-bottom:14px;color:var(--red);font-size:13px;">🔒 Settings restricted to Admin and Super Admin.</div>
     <button class="btn br bfl" onclick="doLogout()" style="margin-top:8px;">Sign Out</button>
+    <div style="text-align:center;color:var(--mut);font-size:10px;margin-top:18px;opacity:.6;">Developed by Tech & Solutions</div>
   </div>
 
   <!-- PTA IMEI -->
@@ -219,6 +242,7 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
   <button class="nb" onclick="goTab('invoices')"><div class="ni" id="ni-invoices">🧾</div><span class="nl" id="nl-invoices">Invoices</span></button>
   <button class="nb" onclick="goTab('reports')"><div class="ni" id="ni-reports">📊</div><span class="nl" id="nl-reports">Reports</span></button>
   <button class="nb" id="nb-users" style="display:none;" onclick="goTab('users')"><div class="ni" id="ni-users">👤</div><span class="nl" id="nl-users">Users</span></button>
+  <button class="nb" id="nb-activity" style="display:none;" onclick="goTab('activity')"><div class="ni" id="ni-activity">📈</div><span class="nl" id="nl-activity">Activity</span></button>
   <button class="nb" id="nb-pta" style="display:none;" onclick="goTab('pta')"><div class="ni" id="ni-pta">📲</div><span class="nl" id="nl-pta">PTA IMEI</span></button>
   <button class="nb" onclick="goTab('settings')"><div class="ni" id="ni-settings">⚙️</div><span class="nl" id="nl-settings">Settings</span></button>
 </div>
@@ -316,6 +340,7 @@ function doLogin(){
   document.getElementById('hgreet').textContent=user.name;
   document.getElementById('sname').textContent=user.name;
   if(S.role==='superadmin')document.getElementById('nb-users').style.display='flex';
+  if(S.role==='superadmin'||S.role==='admin')document.getElementById('nb-activity').style.display='flex';
   if(S.role==='user'){document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';}
   if(S.role==='pta'){
     document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';
@@ -336,10 +361,11 @@ function doLogout(){
   document.querySelectorAll('#bnav .nb').forEach(b=>b.style.display='flex');
   document.getElementById('nb-pta').style.display='none';
   document.getElementById('nb-users').style.display='none';
+  document.getElementById('nb-activity').style.display='none';
   document.getElementById('price-settings').style.display='block';document.getElementById('no-set').style.display='none';
 }
 
-const TABS=['dash','customers','invoices','reports','users','settings','pta'];
+const TABS=['dash','customers','invoices','reports','users','settings','pta','activity'];
 function goTab(t){
   TABS.forEach(x=>{
     const s=document.getElementById('tab-'+x),ni=document.getElementById('ni-'+x),nl=document.getElementById('nl-'+x);
@@ -352,6 +378,7 @@ function goTab(t){
   if(t==='invoices')renderInvoices();
   if(t==='reports')renderReports();
   if(t==='users')renderUsers();
+  if(t==='activity')renderActivity();
   if(t==='pta')renderImeis();
 }
 
@@ -422,7 +449,7 @@ function openCustDetail(id){
       <div><div style="font-size:17px;font-weight:900;">${c.name}</div>
       <span class="bdg" style="background:${c.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${c.status==='active'?'var(--grn)':'var(--red)'};">${c.status}</span></div>
     </div>
-    ${[['📞','Mobile',c.mobile],['🪪','CNIC',c.cnic||'—'],['🏠','Address',`H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}`],
+    ${[['📞','Mobile',c.mobile],['🪪','CNIC',c.cnic||'—'],c.imei?['📲','IMEI',c.imei]:null,['🏠','Address',`H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}`],
       ['📍','Project',c.project],['📅','Install Date',c.installDate],c.notes?['📝','Notes',c.notes]:null
     ].filter(Boolean).map(([i,l,v])=>`
       <div style="padding:8px 0;border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-start;">
@@ -489,7 +516,7 @@ function openInvDetail(id){
       <div style="background:linear-gradient(135deg,var(--or),var(--ord));padding:16px 18px;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div><div style="color:#fff;font-size:18px;font-weight:900;">AA Communication</div>
-          <div style="color:rgba(255,255,255,.7);font-size:11px;">Alarm Systems · Bahria Projects</div></div>
+          <div style="color:rgba(255,255,255,.7);font-size:11px;">Alarm Systems · Security Solutions</div></div>
           <div style="background:rgba(255,255,255,.2);padding:5px 11px;border-radius:7px;color:#fff;font-size:10px;font-weight:800;">INVOICE</div>
         </div>
       </div>
@@ -515,6 +542,8 @@ function openInvDetail(id){
           <span style="color:var(--or);font-size:20px;font-weight:900;">${fmt(inv.total)}</span>
         </div>
         <div style="text-align:center;padding:8px;border-radius:9px;margin-top:10px;background:${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:12px;font-weight:800;letter-spacing:2px;" id="inv-sbdg">${inv.status==='paid'?'✓ PAID':'⚠ UNPAID'}</div>
+        ${inv.createdByName?`<div style="text-align:center;color:var(--mut);font-size:10px;margin-top:8px;">Generated by: ${inv.createdByName} (${inv.createdByRole||''})</div>`:''}
+        <div style="text-align:center;color:var(--mut);font-size:9px;margin-top:4px;opacity:.6;">Powered by Tech & Solutions</div>
       </div>
     </div>
     <div style="display:flex;gap:9px;margin-bottom:9px;">
@@ -558,17 +587,68 @@ function renderReports(){
 
 // New invoice form
 let iQty={};
+let invDirectMode=false;
+function custOptionsHTML(filterProj,q){
+  q=(q||'').toLowerCase();
+  return S.custs.filter(c=>{
+    const mp=!filterProj||filterProj==='all'||c.project===filterProj;
+    const mq=!q||c.name.toLowerCase().includes(q)||c.mobile.includes(q)||c.house.toLowerCase().includes(q);
+    return mp&&mq;
+  }).map(c=>`<option value="${c.id}">${c.name} — H#${c.house} ${c.block} — ${c.project}</option>`).join('');
+}
 function showNewInvoice(preCust){
-  iQty={};
+  iQty={};invDirectMode=false;
   document.getElementById('mtitle').textContent="New Invoice";
-  const custOpts=S.custs.map(c=>`<option value="${c.id}"${c.id===preCust?' selected':''}>${c.name} — ${c.project}</option>`).join('');
+  let preProj='all';
+  if(preCust){const pc=S.custs.find(x=>x.id===preCust);if(pc)preProj=pc.project;}
   document.getElementById('mbody').innerHTML=`
-    <div class="fw"><label class="fl">Customer</label><select class="fi" id="ic">${custOpts}</select></div>
-    <div class="stl" style="margin-top:4px;">Select Items & Quantities</div>
+    <div class="fw"><label class="fl">Invoice Type</label>
+      <select class="fi" id="ityp" onchange="renderItems()">
+        <option value="installation">Installation</option>
+        <option value="complaint">Complaint / Service</option>
+      </select>
+    </div>
+    <div id="cust-section">
+      <div class="fw"><label class="fl">Project</label><select class="fi" id="iprojf" onchange="refreshCustOpts()">
+        <option value="all">All Projects</option>
+        ${PROJECTS.map(p=>`<option${p===preProj?' selected':''}>${p}</option>`).join('')}
+      </select></div>
+      <div class="sb" style="margin-bottom:6px;"><span>🔍</span><input id="icustsearch" placeholder="Name, mobile, house no…" oninput="refreshCustOpts()"/></div>
+      <div class="fw"><label class="fl">Customer</label><select class="fi" id="ic">${custOptionsHTML(preProj,'')}</select></div>
+      <button class="btn bsm" style="background:rgba(255,107,0,.15);color:var(--or);border:none;margin-bottom:10px;" onclick="toggleDirectInvoice()">+ New / Walk-in Customer (Direct Invoice)</button>
+    </div>
+    <div id="direct-section" style="display:none;">
+      <div class="c2" style="margin-bottom:10px;color:var(--mut);font-size:11px;">Customer auto add ho jayega is invoice ke saath.</div>
+      <div class="fw"><label class="fl">Customer Name *</label><input class="fi" id="dn" placeholder="Full name"/></div>
+      <div class="fw"><label class="fl">Mobile *</label><input class="fi" id="dm" placeholder="0300-0000000" type="tel"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="fw"><label class="fl">House # *</label><input class="fi" id="dh" placeholder="12"/></div>
+        <div class="fw"><label class="fl">Street #</label><input class="fi" id="ds" placeholder="5"/></div>
+      </div>
+      <div class="fw"><label class="fl">Block *</label><input class="fi" id="db" placeholder="B"/></div>
+      <div class="fw"><label class="fl">Project *</label><select class="fi" id="dpr">${PROJECTS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+      <div class="fw"><label class="fl">IMEI</label><input class="fi" id="dimei" placeholder="Device IMEI" maxlength="20"/></div>
+      <button class="btn bsm bo" onclick="toggleDirectInvoice()">← Select Existing Customer Instead</button>
+    </div>
+    <div class="stl" style="margin-top:10px;" id="items-title">Select Items & Quantities</div>
     <div id="items-list"></div>
     <div style="background:rgba(255,107,0,.12);border-radius:11px;padding:11px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,107,0,.3);">
       <span style="font-size:14px;font-weight:700;">Grand Total</span>
       <span style="color:var(--or);font-size:20px;font-weight:900;" id="gtotal">₨ 0</span>
+    </div>
+    <div class="fw"><label class="fl">Payment Method</label>
+      <select class="fi" id="ipay" onchange="togglePayProof()">
+        <option value="pending" selected>Pending</option>
+        <option value="cash">Cash</option>
+        <option value="bank">Bank Transfer</option>
+        <option value="easypaisa">Easypaisa</option>
+        <option value="jazzcash">JazzCash</option>
+      </select>
+    </div>
+    <div class="fw" id="pay-proof-wrap" style="display:none;">
+      <label class="fl">Payment Screenshot *</label>
+      <input class="fi" type="file" id="ipayproof" accept="image/*" onchange="loadProofPreview()"/>
+      <div id="proof-preview" style="margin-top:6px;"></div>
     </div>
     <div style="display:flex;gap:9px;">
       <button class="btn bo bfl" onclick="closeM()">Cancel</button>
@@ -576,15 +656,45 @@ function showNewInvoice(preCust){
     </div>
   `;
   renderItems();
+  if(preCust)document.getElementById('ic').value=preCust;
+}
+function refreshCustOpts(){
+  const proj=document.getElementById('iprojf')?.value||'all';
+  const q=document.getElementById('icustsearch')?.value||'';
+  document.getElementById('ic').innerHTML=custOptionsHTML(proj,q);
+}
+function toggleDirectInvoice(){
+  invDirectMode=!invDirectMode;
+  document.getElementById('cust-section').style.display=invDirectMode?'none':'block';
+  document.getElementById('direct-section').style.display=invDirectMode?'block':'none';
+}
+let payProofData=null;
+function togglePayProof(){
+  const v=document.getElementById('ipay').value;
+  const wrap=document.getElementById('pay-proof-wrap');
+  wrap.style.display=(v==='bank'||v==='easypaisa'||v==='jazzcash')?'block':'none';
+  if(wrap.style.display==='none'){payProofData=null;document.getElementById('proof-preview').innerHTML='';}
+}
+function loadProofPreview(){
+  const f=document.getElementById('ipayproof').files[0];
+  if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    payProofData=e.target.result;
+    document.getElementById('proof-preview').innerHTML=`<img src="${payProofData}" style="max-width:100%;border-radius:8px;border:1.5px solid var(--bdr);max-height:160px;"/>`;
+  };
+  reader.readAsDataURL(f);
 }
 function renderItems(){
+  const typ=document.getElementById('ityp')?.value||'installation';
+  document.getElementById('items-title').textContent=typ==='complaint'?'Select Replaced/Serviced Items & Quantities':'Select Items & Quantities';
   document.getElementById('items-list').innerHTML=ITEMS.map(item=>`
     <div style="background:var(--card2);border-radius:10px;padding:9px 11px;margin-bottom:6px;border:1.5px solid ${(iQty[item.id]||0)>0?'var(--or)':'var(--bdr)'};display:flex;justify-content:space-between;align-items:center;" id="ir-${item.id}">
       <div><div style="font-size:13px;">${item.name}</div>
       <div style="color:var(--or);font-size:11px;font-weight:700;" id="ip-${item.id}">${fmt(S.prices[item.id]||item.price)}</div></div>
       <div class="qty-ctrl">
         <button class="qb qm" onclick="chgQ('${item.id}',-1,${item.price})">−</button>
-        <span class="qn" id="qn-${item.id}">0</span>
+        <span class="qn" id="qn-${item.id}">${iQty[item.id]||0}</span>
         <button class="qb qp" onclick="chgQ('${item.id}',1,${item.price})">+</button>
       </div>
     </div>`).join('');
@@ -600,25 +710,95 @@ function chgQ(id,d,base){
   const ge=document.getElementById('gtotal');if(ge)ge.textContent=fmt(tot);
 }
 function saveInvoice(){
-  const custId=document.getElementById('ic')?.value;
   const sel=ITEMS.filter(i=>(iQty[i.id]||0)>0).map(i=>({name:i.name,qty:iQty[i.id],price:S.prices[i.id]||i.price}));
-  if(!custId||!sel.length){showToast("Customer chunein aur items select karein!","error");return;}
+  if(!sel.length){showToast("Items select karein!","error");return;}
+  const pay=document.getElementById('ipay').value;
+  if((pay==='bank'||pay==='easypaisa'||pay==='jazzcash')&&!payProofData){
+    showToast("Payment screenshot upload karein!","error");return;
+  }
+  let custId;
+  if(invDirectMode){
+    const name=document.getElementById('dn').value.trim(),mobile=document.getElementById('dm').value.trim();
+    const house=document.getElementById('dh').value.trim(),block=document.getElementById('db').value.trim();
+    if(!name||!mobile||!house||!block){showToast("Customer Name, Mobile, House, Block required!","error");return;}
+    const newCust={id:"A"+String(Date.now()).slice(-6),name,mobile,cnic:'',imei:document.getElementById('dimei').value.trim(),house,street:document.getElementById('ds').value.trim(),block,project:document.getElementById('dpr').value,installDate:todayStr(),notes:'Direct invoice — auto added',status:"active"};
+    S.custs.unshift(newCust);custId=newCust.id;
+    buildProjPills();
+  } else {
+    custId=document.getElementById('ic')?.value;
+    if(!custId){showToast("Customer chunein!","error");return;}
+  }
   const total=sel.reduce((s,i)=>s+i.qty*i.price,0);
-  const inv={id:genId(),custId,date:todayStr(),items:sel,status:"unpaid",total};
+  const typ=document.getElementById('ityp').value;
+  const user=S.users.find(u=>u.id===S.uid)||{};
+  const inv={id:genId(),custId,date:todayStr(),items:sel,status:pay==='pending'?'unpaid':'paid',total,type:typ,payMethod:pay,payProof:payProofData||null,createdBy:S.uid,createdByName:user.name||'',createdByRole:S.role};
   S.invoices.unshift(inv);sv();closeM();renderAll();showToast("Invoice created! ✓");
+  payProofData=null;
   setTimeout(()=>openInvDetail(inv.id),300);
 }
 
+
+function genInvPdf(inv,c){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:[300,500]});
+  let y=30;
+  doc.setFillColor(255,107,0);doc.rect(0,0,300,55,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(16);
+  doc.text('AA Communication',20,28);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('Alarm Systems · Security Solutions',20,42);
+  y=75;
+  doc.setTextColor(20,20,20);doc.setFontSize(10);
+  doc.setFont('helvetica','bold');doc.text('Invoice No: '+inv.id,20,y);
+  doc.text('Date: '+inv.date,200,y);y+=20;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);
+  doc.text('Customer: '+c.name,20,y);y+=14;
+  doc.text('Mobile: '+c.mobile,20,y);y+=14;
+  doc.text('Address: H# '+c.house+', Block '+c.block+(c.street?', St '+c.street:''),20,y);y+=14;
+  doc.text('Project: '+c.project,20,y);y+=14;
+  if(c.cnic){doc.text('CNIC: '+c.cnic,20,y);y+=14;}
+  y+=6;
+  doc.setDrawColor(220,220,220);doc.line(20,y,280,y);y+=16;
+  doc.setFont('helvetica','bold');doc.text('Item',20,y);doc.text('Qty',180,y);doc.text('Amount',230,y);y+=10;
+  doc.line(20,y,280,y);y+=14;
+  doc.setFont('helvetica','normal');
+  inv.items.forEach(it=>{
+    doc.text(it.name,20,y);doc.text(String(it.qty),185,y);doc.text(fmt(it.qty*it.price),230,y);y+=16;
+  });
+  y+=6;doc.line(20,y,280,y);y+=18;
+  doc.setFont('helvetica','bold');doc.setFontSize(12);
+  doc.text('Grand Total: '+fmt(inv.total),20,y);y+=22;
+  doc.setFontSize(10);
+  doc.setTextColor(inv.status==='paid'?34:220,inv.status==='paid'?150:40,inv.status==='paid'?80:40);
+  doc.text(inv.status==='paid'?'STATUS: PAID':'STATUS: UNPAID',20,y);y+=18;
+  if(inv.payMethod&&inv.payMethod!=='pending'){
+    doc.setTextColor(100,100,100);doc.setFontSize(9);
+    doc.text('Payment Method: '+inv.payMethod.toUpperCase(),20,y);y+=14;
+  }
+  doc.setTextColor(150,150,150);doc.setFontSize(8);
+  doc.text('Thank you for choosing AA Communication',20,y+10);
+  doc.text('Powered by Tech & Solutions',20,y+22);
+  return doc;
+}
 function waInv(id){
   const inv=S.invoices.find(i=>i.id===id);const c=S.custs.find(x=>x.id===inv?.custId);if(!inv||!c)return;
-  const msg=`*AA Communication — Alarm Invoice*\n\n${inv.id} · ${inv.date}\n\n*Customer:* ${c.name}\n*Mobile:* ${c.mobile}\n*Address:* H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}\n*Project:* ${c.project}\n${c.cnic?'*CNIC:* '+c.cnic+'\n':''}\n*Items:*\n${inv.items.map(i=>`${i.name} × ${i.qty} = ${fmt(i.qty*i.price)}`).join('\n')}\n\n*Grand Total: ${fmt(inv.total)}*\n*Status: ${inv.status.toUpperCase()}*\n\nThank you for choosing AA Communication! 🙏`;
-  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  try{
+    const doc=genInvPdf(inv,c);
+    doc.save('Invoice-'+inv.id+'.pdf');
+    showToast("PDF download ho gayi — WhatsApp khol kar attach karein","success");
+  }catch(e){
+    showToast("PDF error: "+e.message,"error");
+  }
+  setTimeout(()=>{
+    const msg=`*AA Communication — Alarm Invoice*\n\n${inv.id} · ${inv.date}\n*Customer:* ${c.name}\n*Total:* ${fmt(inv.total)}\n*Status:* ${inv.status.toUpperCase()}\n\nReceipt PDF attached. Thank you! 🙏`;
+    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  },800);
 }
 function printInv(id){
   const inv=S.invoices.find(i=>i.id===id);const c=S.custs.find(x=>x.id===inv?.custId);if(!inv||!c)return;
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>Invoice ${inv.id}</title><style>body{font-family:Arial,sans-serif;padding:24px;max-width:500px;margin:0 auto;}.hdr{background:#FF6B00;color:#fff;padding:16px;border-radius:8px;margin-bottom:16px;}h2{margin:0;font-size:18px;}p{margin:3px 0;font-size:12px;}.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:13px;}.stat{display:inline-block;padding:4px 12px;border-radius:5px;font-weight:bold;background:${inv.status==='paid'?'#dcfce7':'#fee2e2'};color:${inv.status==='paid'?'#16a34a':'#dc2626'};}.total{font-size:18px;font-weight:bold;color:#FF6B00;text-align:right;margin-top:10px;}.footer{margin-top:20px;color:#999;font-size:11px;text-align:center;}</style></head><body>
-  <div class="hdr"><h2>AA Communication</h2><p>Alarm Systems — Bahria Projects</p></div>
+  <div class="hdr"><h2>AA Communication</h2><p>Alarm Systems — Security Solutions</p></div>
   <div style="display:flex;justify-content:space-between;margin-bottom:14px;align-items:center;">
     <div><div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:1px;">Invoice No.</div><b style="font-size:15px;">${inv.id}</b><div style="color:#666;font-size:12px;">Date: ${inv.date}</div></div>
     <span class="stat">${inv.status.toUpperCase()}</span>
@@ -629,7 +809,7 @@ function printInv(id){
   </div>
   ${inv.items.map(i=>`<div class="row"><div>${i.name}<div style="color:#999;font-size:11px;">Qty ${i.qty} × ${fmt(i.price)}</div></div><b>${fmt(i.qty*i.price)}</b></div>`).join('')}
   <div class="total">Grand Total: ${fmt(inv.total)}</div>
-  <div class="footer"><p>Thank you for choosing AA Communication Pvt. Ltd.</p></div>
+  <div class="footer"><p>Thank you for choosing AA Communication Pvt. Ltd.</p><p style="margin-top:6px;opacity:.6;">Powered by Tech & Solutions</p></div>
   <script>window.print();<\/script></body></html>`);
   w.document.close();
 }
@@ -654,6 +834,51 @@ function renderUsers(){
   </div>`).join('');
 }
 function togUsr(id){S.users=S.users.map(u=>u.id===id?{...u,status:u.status==='active'?'inactive':'active'}:u);sv();renderUsers();showToast("Updated!");}
+
+function renderActivity(){
+  if(S.role!=='superadmin'&&S.role!=='admin')return;
+  const sel=document.getElementById('act-user');
+  if(sel.options.length<=1){
+    const opts=S.users.filter(u=>u.role!=='pta').map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+    sel.innerHTML=`<option value="all">All Users</option>${opts}`;
+  }
+  const uid=sel.value,typ=document.getElementById('act-type').value;
+  let list=S.invoices.filter(i=>i.createdBy);
+  if(uid!=='all')list=list.filter(i=>i.createdBy===uid);
+  if(typ!=='all')list=list.filter(i=>(i.type||'installation')===typ);
+  const totalAmt=list.reduce((s,i)=>s+i.total,0);
+  const paidAmt=list.filter(i=>i.status==='paid').reduce((s,i)=>s+i.total,0);
+  const pendingAmt=list.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.total,0);
+  const instCount=list.filter(i=>(i.type||'installation')==='installation').length;
+  const compCount=list.filter(i=>i.type==='complaint').length;
+  document.getElementById('activity-summary').innerHTML=`
+    <div class="sgrid">
+      <div class="sc"><div class="sl">Total Invoices</div><div class="sv" style="color:var(--or);">${list.length}</div></div>
+      <div class="sc"><div class="sl">Total Amount</div><div class="sv" style="color:var(--txt);font-size:14px;">${fmt(totalAmt)}</div></div>
+    </div>
+    <div class="sgrid" style="margin-bottom:10px;">
+      <div class="sc"><div class="sl">Collected (Paid)</div><div class="sv" style="color:var(--grn);font-size:14px;">${fmt(paidAmt)}</div></div>
+      <div class="sc"><div class="sl">Pending (Unpaid)</div><div class="sv" style="color:var(--red);font-size:14px;">${fmt(pendingAmt)}</div></div>
+    </div>
+    <div class="sgrid" style="margin-bottom:10px;">
+      <div class="sc"><div class="sl">Installations</div><div class="sv" style="color:var(--blu);">${instCount}</div></div>
+      <div class="sc"><div class="sl">Complaints/Service</div><div class="sv" style="color:var(--ylw);">${compCount}</div></div>
+    </div>`;
+  document.getElementById('activity-list').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:24px 0;">No invoices found</div>`:
+    list.map(inv=>{
+      const c=S.custs.find(x=>x.id===inv.custId);
+      return `<div class="card" style="cursor:pointer;" onclick="openInvDetail('${inv.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div><div style="font-size:13px;font-weight:700;">${c?.name||'—'}</div>
+          <div style="color:var(--mut);font-size:11px;">${inv.id} · ${inv.date} · ${(inv.type==='complaint'?'Complaint':'Installation')}</div>
+          <div style="color:var(--mut);font-size:11px;">By ${inv.createdByName||'—'}</div></div>
+          <div style="text-align:right;"><div style="color:var(--or);font-size:14px;font-weight:800;">${fmt(inv.total)}</div>
+          <span class="bdg" style="background:${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${inv.status==='paid'?'var(--grn)':'var(--red)'};">${inv.status}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
 function delUsr(id){S.users=S.users.filter(u=>u.id!==id);sv();renderUsers();showToast("Deleted","error");}
 
 function renderPrices(){
@@ -692,6 +917,7 @@ function showAddCust(){
     <div class="fw"><label class="fl">Customer Name *</label><input class="fi" id="fn" placeholder="Full name"/></div>
     <div class="fw"><label class="fl">Mobile *</label><input class="fi" id="fm" placeholder="0300-0000000" type="tel"/></div>
     <div class="fw"><label class="fl">CNIC</label><input class="fi" id="fcn" placeholder="35202-XXXXXXX-X"/></div>
+    <div class="fw"><label class="fl">IMEI Number</label><input class="fi" id="fimei" placeholder="Device IMEI" maxlength="20"/></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fw"><label class="fl">House # *</label><input class="fi" id="fh" placeholder="12"/></div>
       <div class="fw"><label class="fl">Street #</label><input class="fi" id="fs" placeholder="5"/></div>
@@ -713,7 +939,7 @@ function saveCust(){
   const house=document.getElementById('fh').value.trim(),block=document.getElementById('fb').value.trim();
   const fe=document.getElementById('fe');
   if(!name||!mobile||!house||!block){fe.textContent="Name, Mobile, House, Block required!";fe.style.display="block";return;}
-  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,cnic:document.getElementById('fcn').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),status:"active"});
+  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,cnic:document.getElementById('fcn').value.trim(),imei:document.getElementById('fimei').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),status:"active"});
   sv();closeM();renderCusts();renderDash();buildProjPills();showToast("Customer added! ✓");
 }
 function showEditCust(id){
@@ -723,6 +949,7 @@ function showEditCust(id){
     <div class="fw"><label class="fl">Name</label><input class="fi" id="en" value="${c.name}"/></div>
     <div class="fw"><label class="fl">Mobile</label><input class="fi" id="em" value="${c.mobile}"/></div>
     <div class="fw"><label class="fl">CNIC</label><input class="fi" id="ec" value="${c.cnic||''}"/></div>
+    <div class="fw"><label class="fl">IMEI Number</label><input class="fi" id="eimei" value="${c.imei||''}" placeholder="Device IMEI" maxlength="20"/></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fw"><label class="fl">House #</label><input class="fi" id="eh" value="${c.house}"/></div>
       <div class="fw"><label class="fl">Street #</label><input class="fi" id="es" value="${c.street||''}"/></div>
@@ -739,7 +966,7 @@ function showEditCust(id){
   `;
 }
 function updCust(id){
-  S.custs=S.custs.map(c=>c.id===id?{...c,name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,cnic:document.getElementById('ec').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim()}:c);
+  S.custs=S.custs.map(c=>c.id===id?{...c,name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,cnic:document.getElementById('ec').value.trim(),imei:document.getElementById('eimei').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim()}:c);
   sv();closeM();renderCusts();renderDash();showToast("Updated! ✓");
 }
 function showAddUser(){
