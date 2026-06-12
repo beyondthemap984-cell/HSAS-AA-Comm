@@ -337,7 +337,7 @@ function loadS(){return{
     {id:"U1",username:"superadmin",password:"super123",name:"Super Administrator",role:"superadmin",status:"active"},
     {id:"U2",username:"admin",password:"admin123",name:"Administrator",role:"admin",status:"active"},
     {id:"U3",username:"user1",password:"user123",name:"Field Technician",role:"user",status:"active"},
-    {id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"},
+    {id:"U4",username:"pta",password:"Pta@1234",name:"PTA Operator",role:"pta",status:"active"},
   ],
   imeis:JSON.parse(localStorage.getItem('alm_imeis')||'[]'),
   pendingEdits:JSON.parse(localStorage.getItem('alm_pending')||'[]'),
@@ -345,7 +345,7 @@ function loadS(){return{
 };}
 let S=loadS();
 if(!S.users.find(u=>u.role==='pta')){
-  S.users.push({id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"});
+  S.users.push({id:"U4",username:"pta",password:"Pta@1234",name:"PTA Operator",role:"pta",status:"active"});
   sv();
 }
 function sv(){
@@ -373,8 +373,7 @@ if(S.custs.length===0){
   sv();
 }
 
-const HINTS={superadmin:"Hint: super123",admin:"Hint: admin123",user:"Hint: user123",pta:"Hint: pta123"};
-const DEFAULT_USERNAMES={superadmin:"superadmin",admin:"admin",user:"user1",pta:"pta1"};
+const DEFAULT_USERNAMES={superadmin:"superadmin",admin:"admin",user:"user1",pta:"pta"};
 let selRoleVal="superadmin";
 function selRole(btn){
   selRoleVal=btn.dataset.role;
