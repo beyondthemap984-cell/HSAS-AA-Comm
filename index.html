@@ -127,14 +127,21 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
 
   <!-- CUSTOMERS -->
   <div id="tab-customers" class="screen">
+    <!-- Category nav breadcrumb -->
+    <div id="cat-breadcrumb" style="display:none;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--card2);border-radius:10px;border:1px solid var(--bdr);">
+      <button onclick="goBackToCategory()" style="background:var(--or);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif;">← Back</button>
+      <span id="cat-breadcrumb-text" style="font-size:12px;font-weight:700;color:var(--mut);"></span>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <div style="font-size:20px;font-weight:900;">Customers <span style="color:var(--mut);font-size:14px;" id="ccount"></span></div>
+      <div style="font-size:20px;font-weight:900;" id="cust-heading">Customers <span style="color:var(--mut);font-size:14px;" id="ccount"></span></div>
       <button class="btn bor bsm" onclick="openM('add-cust')">+ Add</button>
     </div>
     <div class="sb"><span>🔍</span><input id="csearch" placeholder="Name, mobile, Device SN, house, block…" oninput="renderCusts()"/><button onclick="document.getElementById('csearch').value='';renderCusts()" style="background:none;border:none;cursor:pointer;color:var(--mut);">✕</button></div>
     <div class="pills" id="proj-pills">
       <button class="pill act" onclick="setProjFilter('all',this)">All</button>
     </div>
+    <!-- Subcategory pills (shown when a category is selected) -->
+    <div id="subcat-pills" style="display:none;" class="pills"></div>
     <div id="custs-list"></div>
   </div>
 
@@ -242,14 +249,39 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
   <!-- PTA IMEI -->
   <div id="tab-pta" class="screen">
     <div style="font-size:20px;font-weight:900;margin-bottom:14px;">PTA — IMEI Records</div>
-    <div class="sgrid" style="margin-bottom:14px;">
-      <div class="sc"><div class="sl">Total IMEIs</div><div class="sv" style="color:var(--or);" id="pta-total">0</div></div>
-      <div class="sc"><div class="sl">Pending Approval</div><div class="sv" style="color:var(--ylw);" id="pta-pending">0</div></div>
+    <!-- PTA Dashboard (visible to admin/superadmin, not PTA operator) -->
+    <div id="pta-dashboard" style="display:none;margin-bottom:14px;">
+      <div class="sgrid" style="margin-bottom:10px;">
+        <div class="sc"><div class="sl">Total IMEIs</div><div class="sv" style="color:var(--or);" id="pta-total">0</div></div>
+        <div class="sc"><div class="sl">Pending Approval</div><div class="sv" style="color:var(--ylw);" id="pta-pending">0</div></div>
+      </div>
+      <div class="sgrid" style="margin-bottom:10px;">
+        <div class="sc"><div class="sl">Approved</div><div class="sv" style="color:var(--grn);" id="pta-approved">0</div></div>
+        <div class="sc"><div class="sl">Rejected</div><div class="sv" style="color:var(--red);" id="pta-rejected">0</div></div>
+      </div>
+      <div class="sgrid">
+        <div class="sc"><div class="sl">Total Amount</div><div class="sv" style="color:var(--txt);font-size:14px;" id="pta-total-amt">₨0</div></div>
+        <div class="sc"><div class="sl">Approved Amount</div><div class="sv" style="color:var(--grn);font-size:14px;" id="pta-appr-amt">₨0</div></div>
+      </div>
+    </div>
+    <!-- PTA operator sees simple stats -->
+    <div id="pta-simple-stats" style="display:none;">
+      <div class="sgrid" style="margin-bottom:14px;">
+        <div class="sc"><div class="sl">My IMEIs</div><div class="sv" style="color:var(--or);" id="pta-total">0</div></div>
+        <div class="sc"><div class="sl">Pending</div><div class="sv" style="color:var(--ylw);" id="pta-pending">0</div></div>
+      </div>
     </div>
     <div id="pta-controls"></div>
     <div class="pills" id="pta-pills"></div>
     <div class="sb"><span>🔍</span><input id="pta-search" placeholder="Search IMEI…" oninput="renderImeis()"/></div>
     <div id="imei-list"></div>
+
+    <!-- PTA Operator: Read-only Customers List -->
+    <div id="pta-cust-section" style="display:none;margin-top:18px;">
+      <div style="font-size:16px;font-weight:900;margin-bottom:10px;">📋 Customers List <span style="color:var(--mut);font-size:11px;font-weight:400;">(Read Only)</span></div>
+      <div class="sb"><span>🔍</span><input id="pta-csearch" placeholder="Name, mobile, block…" oninput="renderPtaCusts()"/><button onclick="document.getElementById('pta-csearch').value='';renderPtaCusts()" style="background:none;border:none;cursor:pointer;color:var(--mut);">✕</button></div>
+      <div id="pta-custs-list"></div>
+    </div>
   </div>
 
 </div>
@@ -264,7 +296,7 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
   <button class="nb" id="nb-users" style="display:none;" onclick="goTab('users')"><div class="ni" id="ni-users">👤</div><span class="nl" id="nl-users">Users</span></button>
   <button class="nb" id="nb-activity" style="display:none;" onclick="goTab('activity')"><div class="ni" id="ni-activity">📈</div><span class="nl" id="nl-activity">Activity</span></button>
   <button class="nb" id="nb-pta" style="display:none;" onclick="goTab('pta')"><div class="ni" id="ni-pta">📲</div><span class="nl" id="nl-pta">PTA IMEI</span></button>
-  <button class="nb" onclick="goTab('settings')"><div class="ni" id="ni-settings">⚙️</div><span class="nl" id="nl-settings">Settings</span></button>
+  <button class="nb" id="nb-settings" onclick="goTab('settings')"><div class="ni" id="ni-settings">⚙️</div><span class="nl" id="nl-settings">Settings</span></button>
 </div>
 
 <div id="toast"></div>
@@ -330,6 +362,9 @@ if(S.custs.length===0){
     {id:"A001",name:"Bilal Khan",mobile:"0321-9876543",house:"45",street:"2",block:"C",project:"Bahria EMC",installDate:"2024-05-20",notes:"4 door contacts, backyard",status:"active"},
     {id:"A002",name:"Sara Ali",mobile:"0333-4567890",house:"7",street:"1",block:"A",project:"Bahria Nasheman",installDate:"2024-01-10",notes:"",status:"inactive"},
     {id:"A003",name:"Usman Tariq",mobile:"0345-1122334",house:"33",street:"8",block:"D",project:"Bahria Mohlanwal",installDate:"2024-07-01",notes:"Kitchen smoke detectors",status:"active"},
+    {id:"A004",name:"Ahmed Raza",mobile:"0300-1234567",house:"12",street:"3",block:"A",project:"Bahria EMC",installDate:"2024-08-15",notes:"",status:"active"},
+    {id:"A005",name:"Fatima Malik",mobile:"0311-9988776",house:"22",street:"5",block:"B",project:"Bahria EMC",installDate:"2024-09-01",notes:"",status:"active"},
+    {id:"A006",name:"Kamran Shah",mobile:"0322-4455667",house:"8",street:"1",block:"A",project:"Bahria EMC",installDate:"2024-10-10",notes:"",status:"active"},
   ];
   S.invoices=[
     {id:"ALM-001",custId:"A001",date:"2025-05-20",items:[{name:"Alarm Panel",qty:1,price:3500},{name:"Door Contact",qty:4,price:450},{name:"Installation Charges",qty:1,price:1500}],status:"unpaid",total:6800},
@@ -363,21 +398,25 @@ function doLogin(){
   document.getElementById('sname').textContent=user.name;
   if(S.role==='superadmin')document.getElementById('nb-users').style.display='flex';
   if(S.role==='superadmin'||S.role==='admin')document.getElementById('nb-activity').style.display='flex';
-  if(S.role==='superadmin')document.getElementById('nb-approvals').style.display='flex';
+  if(S.role==='superadmin'||S.role==='admin')document.getElementById('nb-approvals').style.display='flex';
   if(S.role==='user'){
     document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';
     document.getElementById('nb-reports').style.display='none';
   }
   if(S.role==='pta'){
-    document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';
+    document.getElementById('price-settings').style.display='none';
+    document.getElementById('no-set').style.display='block';
+    // Hide ALL nav buttons first
     document.querySelectorAll('#bnav .nb').forEach(b=>b.style.display='none');
-    document.getElementById('nb-pta').style.display='flex';
-    document.getElementById('nb-settings').style.display='flex';
-    renderPrices();renderImeis();goTab('pta');
+    // Show only PTA IMEI and Settings
+    const nbPta=document.getElementById('nb-pta');if(nbPta)nbPta.style.display='flex';
+    const nbSet=document.getElementById('nb-settings');if(nbSet)nbSet.style.display='flex';
+    renderPrices();
+    goTab('pta');
     return;
   }
   document.getElementById('nb-pta').style.display=(S.role==='admin'||S.role==='superadmin')?'flex':'none';
-  renderPrices();buildProjPills();renderAll();goTab('dash');
+  renderPrices();buildProjPills();updateSubcatPills();renderAll();goTab('dash');
 }
 function doLogout(){
   S.role=null;S.uid=null;document.getElementById('lp').value='';document.getElementById('lerr').textContent='';
@@ -402,7 +441,7 @@ function goTab(t){
     if(nl)nl.classList.toggle('act',x===t);
   });
   if(t==='dash')renderDash();
-  if(t==='customers')renderCusts();
+  if(t==='customers'){S_subcat=null;if(document.getElementById('cat-breadcrumb'))document.getElementById('cat-breadcrumb').style.display='none';renderCusts();updateSubcatPills();}
   if(t==='invoices')renderInvoices();
   if(t==='reports')renderReports();
   if(t==='users')renderUsers();
@@ -459,14 +498,52 @@ function renderDash(){
     }).join('');
 }
 
+// Category/Subcategory system
+// PROJECTS are treated as main categories. Sub-categories are derived from block values within a project.
+let S_subcat = null; // currently selected subcategory (block)
+
 function buildProjPills(){
   const el=document.getElementById('proj-pills');if(!el)return;
   const projs=['all',...new Set(S.custs.map(c=>c.project))];
-  el.innerHTML=projs.map(p=>`<button class="pill${p==='all'?' act':''}" onclick="setProjFilter('${p}',this)" style="white-space:nowrap;">${p==='all'?'All':p}</button>`).join('');
+  el.innerHTML=projs.map(p=>`<button class="pill${(S.projFilter===p&&!S_subcat)?' act':''}" onclick="setProjFilter('${p}',this)" style="white-space:nowrap;">${p==='all'?'All':p}</button>`).join('');
 }
 function setProjFilter(f,btn){
   S.projFilter=f;
+  S_subcat=null;
   document.querySelectorAll('#proj-pills .pill').forEach(b=>b.classList.toggle('act',b===btn));
+  // Update subcategory pills
+  updateSubcatPills();
+  // Hide back button when at top level
+  const bc=document.getElementById('cat-breadcrumb');
+  if(bc)bc.style.display='none';
+  renderCusts();
+}
+function updateSubcatPills(){
+  const subcatEl=document.getElementById('subcat-pills');if(!subcatEl)return;
+  if(S.projFilter==='all'){subcatEl.style.display='none';return;}
+  // Get unique blocks for selected project
+  const blocks=[...new Set(S.custs.filter(c=>c.project===S.projFilter).map(c=>c.block).filter(Boolean))].sort();
+  if(blocks.length<=1){subcatEl.style.display='none';return;}
+  subcatEl.style.display='flex';
+  subcatEl.innerHTML=`<button class="pill${!S_subcat?' act':''}" onclick="setSubcat(null,this)" style="white-space:nowrap;">All Blocks</button>`+
+    blocks.map(b=>`<button class="pill${S_subcat===b?' act':''}" onclick="setSubcat('${b}',this)" style="white-space:nowrap;">Block ${b}</button>`).join('');
+}
+function setSubcat(block,btn){
+  S_subcat=block;
+  document.querySelectorAll('#subcat-pills .pill').forEach(b=>b.classList.toggle('act',b===btn));
+  const bc=document.getElementById('cat-breadcrumb');
+  if(block){
+    bc.style.display='flex';
+    document.getElementById('cat-breadcrumb-text').textContent=`${S.projFilter} › Block ${block}`;
+  } else {
+    bc.style.display='none';
+  }
+  renderCusts();
+}
+function goBackToCategory(){
+  S_subcat=null;
+  updateSubcatPills();
+  document.getElementById('cat-breadcrumb').style.display='none';
   renderCusts();
 }
 
@@ -476,7 +553,9 @@ function renderCusts(){
   if(S.role==='user')base=base.filter(c=>c.createdBy===S.uid);
   const list=base.filter(c=>{
     const mq=!q||c.name.toLowerCase().includes(q.toLowerCase())||c.mobile.includes(q)||c.house.includes(q)||c.block.toLowerCase().includes(q.toLowerCase())||(c.imei||'').toLowerCase().includes(q.toLowerCase());
-    return mq&&(S.projFilter==='all'||c.project===S.projFilter);
+    const matchProj=S.projFilter==='all'||c.project===S.projFilter;
+    const matchSubcat=!S_subcat||c.block===S_subcat;
+    return mq&&matchProj&&matchSubcat;
   });
   document.getElementById('ccount').textContent=`(${list.length})`;
   document.getElementById('custs-list').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:32px 0;">No customers found</div>`:
@@ -622,6 +701,9 @@ function openInvDetail(id){
     ${canTogglePay(inv)?`<button class="btn bfl" style="background:transparent;border:1.5px solid ${inv.status==='paid'?'var(--red)':'var(--grn)'};color:${inv.status==='paid'?'var(--red)':'var(--grn)'};" id="tog-btn" onclick="toggleInv('${inv.id}');refreshBdg('${inv.id}')">
       ${inv.status==='paid'?'Mark as Unpaid':'✓ Mark as Paid'}
     </button>`:''}
+    ${S.role==='user'&&inv.status==='unpaid'&&inv.createdBy===S.uid?`<button class="btn bfl" style="background:rgba(245,158,11,.2);color:var(--ylw);border:1.5px solid var(--ylw);margin-top:8px;" onclick="closeM();showPaymentRequest('${inv.id}')">
+      💳 Payment Receive Hui — Request Bhejein
+    </button>`:''}
   `;
   openM();
 }
@@ -641,6 +723,59 @@ function toggleInv(id){
   if(!canTogglePay(inv)){showToast("Sirf Super Admin ya invoice banane wala Admin status badal sakta hai","error");return;}
   S.invoices=S.invoices.map(i=>i.id===id?{...i,status:i.status==='paid'?'unpaid':'paid'}:i);
   sv();renderInvoices();renderDash();showToast("Status updated! ✓");
+}
+
+// User requests payment for a pending invoice
+function showPaymentRequest(invId){
+  const inv=S.invoices.find(i=>i.id===invId);if(!inv)return;
+  const c=S.custs.find(x=>x.id===inv.custId);
+  // Check if already requested
+  const existing=S.pendingEdits.find(p=>p.type==='invoice'&&p.action==='pay_request'&&p.targetId===invId&&p.status==='pending');
+  if(existing){showToast("Payment request already pending hai","warn");return;}
+  document.getElementById('mtitle').textContent="Payment Request";
+  document.getElementById('mbody').innerHTML=`
+    <div class="c2" style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;">${c?.name||'—'}</div>
+      <div style="color:var(--mut);font-size:11px;">${inv.id} · ${fmt(inv.total)}</div>
+    </div>
+    <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--ylw);">
+      💡 Aap payment receive hone ki request bhejenge. Admin recommend karega, phir Super Admin approve karega.
+    </div>
+    <div class="fw"><label class="fl">Remarks / Details *</label>
+      <textarea class="fi" id="pay-req-remarks" placeholder="Payment kaise aayi? (Cash, Transfer, etc.) aur koi details…" style="height:90px;resize:none;"></textarea>
+    </div>
+    <div class="fw"><label class="fl">Payment Method</label>
+      <select class="fi" id="pay-req-method">
+        <option value="cash">Cash</option>
+        <option value="bank">Bank Transfer</option>
+        <option value="easypaisa">Easypaisa</option>
+        <option value="jazzcash">JazzCash</option>
+      </select>
+    </div>
+    <div id="pay-req-err" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:9px;">
+      <button class="btn bo bfl" onclick="closeM()">Cancel</button>
+      <button class="btn bor bfl" onclick="submitPayRequest('${invId}')">📩 Send Request</button>
+    </div>
+  `;
+  openM();
+}
+function submitPayRequest(invId){
+  const remarks=document.getElementById('pay-req-remarks').value.trim();
+  const method=document.getElementById('pay-req-method').value;
+  const err=document.getElementById('pay-req-err');
+  if(!remarks){err.textContent="Remarks likhein!";err.style.display="block";return;}
+  const inv=S.invoices.find(i=>i.id===invId);
+  const c=S.custs.find(x=>x.id===inv?.custId);
+  const u=S.users.find(x=>x.id===S.uid)||{};
+  S.pendingEdits.unshift({
+    id:genPendId(),type:'invoice',action:'pay_request',targetId:invId,
+    data:{status:'paid',payMethod:method},
+    label:`${c?.name||'—'} — ${invId} — ${fmt(inv?.total||0)}`,
+    remarks,requestedBy:S.uid,requestedByName:u.name||'',
+    date:todayStr(),status:'pending'
+  });
+  sv();closeM();showToast("Payment request Super Admin ko bhej di ✓");
 }
 
 function repInRange(dateStr){
@@ -1013,36 +1148,58 @@ function requestDelete(type,targetId,label){
   sv();showToast("Delete request Super Admin ko bhej diya ✓");
 }
 function renderApprovals(){
-  if(S.role!=='superadmin')return;
-  const list=S.pendingEdits.filter(p=>p.status===S.pendFilter);
+  if(S.role!=='superadmin'&&S.role!=='admin')return;
+  let list=S.pendingEdits.filter(p=>p.status===S.pendFilter);
+  // Admin only sees pay_requests for recommend; superadmin sees all
+  if(S.role==='admin') list=list.filter(p=>p.action==='pay_request');
   document.getElementById('approvals-list').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:32px 0;">No requests</div>`:
     list.map(p=>{
-      const stColor=p.status==='approved'?'var(--grn)':p.status==='rejected'?'var(--red)':'var(--ylw)';
-      const stBg=p.status==='approved'?'rgba(34,197,94,.2)':p.status==='rejected'?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)';
+      const stColor=p.status==='approved'?'var(--grn)':p.status==='rejected'?'var(--red)':p.status==='recommended'?'var(--blu)':'var(--ylw)';
+      const stBg=p.status==='approved'?'rgba(34,197,94,.2)':p.status==='rejected'?'rgba(239,68,68,.2)':p.status==='recommended'?'rgba(37,99,235,.2)':'rgba(245,158,11,.2)';
+      const isPayReq=p.action==='pay_request';
+      const adminCanAct=S.role==='admin'&&p.status==='pending'&&isPayReq;
+      const superCanAct=S.role==='superadmin'&&(p.status==='pending'||(isPayReq&&p.status==='recommended'));
       return `<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div><div style="font-size:13px;font-weight:800;">${p.action==='delete'?'🗑 Delete':'✏ Edit'} ${p.type==='customer'?'Customer':'Invoice'}</div>
+          <div><div style="font-size:13px;font-weight:800;">${isPayReq?'💳 Payment Request':p.action==='delete'?'🗑 Delete':'✏ Edit'} ${p.type==='customer'?'Customer':'Invoice'}</div>
           <div style="color:var(--mut);font-size:11px;margin-top:2px;">${p.label||p.targetId}</div>
-          <div style="color:var(--mut);font-size:11px;margin-top:3px;">By ${p.requestedByName||'—'} · ${p.date}</div></div>
+          ${p.remarks?`<div style="color:var(--txt);font-size:11px;margin-top:4px;background:var(--card2);padding:5px 8px;border-radius:7px;">📝 ${p.remarks}</div>`:''}
+          <div style="color:var(--mut);font-size:11px;margin-top:3px;">By ${p.requestedByName||'—'} · ${p.date}</div>
+          ${p.recommendedBy?`<div style="color:var(--blu);font-size:10px;margin-top:2px;">✓ Recommended by ${p.recommendedBy} · ${p.recommendDate||''}</div>`:''}
+          </div>
           <span class="bdg" style="background:${stBg};color:${stColor};">${p.status}</span>
         </div>
-        ${p.status==='pending'?`<div style="display:flex;gap:8px;margin-top:10px;">
+        ${adminCanAct?`<div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn bsm bg bfl" onclick="recommendPayRequest('${p.id}')">✓ Recommend</button>
+          <button class="btn bsm br bfl" onclick="rejectEdit('${p.id}')">✕ Reject</button>
+        </div>`:''}
+        ${superCanAct?`<div style="display:flex;gap:8px;margin-top:10px;">
           <button class="btn bsm bg bfl" onclick="approveEdit('${p.id}')">✓ Approve</button>
           <button class="btn bsm br bfl" onclick="rejectEdit('${p.id}')">✕ Reject</button>
         </div>`:''}
       </div>`;
     }).join('');
 }
-function approveEdit(id){
+function recommendPayRequest(id){
   const p=S.pendingEdits.find(x=>x.id===id);if(!p||p.status!=='pending')return;
+  const u=S.users.find(x=>x.id===S.uid)||{};
+  S.pendingEdits=S.pendingEdits.map(x=>x.id===id?{...x,status:'recommended',recommendedBy:u.name||'',recommendDate:todayStr()}:x);
+  sv();renderApprovals();showToast("Recommend kar diya — Super Admin approve karega ✓","success");
+}
+function approveEdit(id){
+  const p=S.pendingEdits.find(x=>x.id===id);if(!p||p.status==='approved'||p.status==='rejected')return;
+  const u=S.users.find(x=>x.id===S.uid)||{};
   if(p.type==='customer'){
     if(p.action==='delete'){S.custs=S.custs.filter(c=>c.id!==p.targetId);}
     else if(p.action==='edit'){S.custs=S.custs.map(c=>c.id===p.targetId?{...c,...p.data}:c);}
   } else if(p.type==='invoice'){
     if(p.action==='delete'){S.invoices=S.invoices.filter(i=>i.id!==p.targetId);}
     else if(p.action==='edit'){S.invoices=S.invoices.map(i=>i.id===p.targetId?{...i,...p.data}:i);}
+    else if(p.action==='pay_request'){
+      S.invoices=S.invoices.map(i=>i.id===p.targetId?{...i,status:'paid',payMethod:p.data?.payMethod||'cash',paidApprovedBy:u.name||'',paidDate:todayStr()}:i);
+    }
   }
-  S.pendingEdits=S.pendingEdits.map(x=>x.id===id?{...x,status:'approved'}:x);
+  S.pendingEdits=S.pendingEdits.map(x=>x.id===id?{...x,status:'approved',approvedBy:u.name||'',approvedDate:todayStr()}:x);
   sv();renderApprovals();renderAll();showToast("Approved & applied ✓");
 }
 function rejectEdit(id){
@@ -1109,7 +1266,7 @@ function saveCust(){
   if(!name||!mobile||!house||!block){fe.textContent="Name, Mobile, House, Block required!";fe.style.display="block";return;}
   const _u=S.users.find(u=>u.id===S.uid)||{};
   S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,imei:document.getElementById('fimei').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),status:"active",createdBy:S.uid,createdByName:_u.name||''});
-  sv();closeM();renderCusts();renderDash();buildProjPills();showToast("Customer added! ✓");
+  sv();closeM();renderCusts();renderDash();buildProjPills();updateSubcatPills();showToast("Customer added! ✓");
 }
 function showEditCust(id){
   const c=S.custs.find(x=>x.id===id);if(!c)return;
@@ -1224,7 +1381,11 @@ function renderPtaControls(){
       </div>
       <div class="card" style="margin-bottom:10px;">
         <div class="stl" style="margin-bottom:10px;">Upload Excel (IMEI + Amount)</div>
-        <div style="color:var(--mut);font-size:11px;margin-bottom:8px;">Columns: IMEI, Amount (first sheet, row 1 = headers)</div>
+        <div style="background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.3);border-radius:9px;padding:9px 12px;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--blu);margin-bottom:4px;">📋 Required Format:</div>
+          <div style="font-size:11px;color:var(--mut);">Column A: <b>Sr#</b> &nbsp;|&nbsp; Column B: <b>IMEI</b> &nbsp;|&nbsp; Column C: <b>Amount</b></div>
+          <div style="font-size:10px;color:var(--mut);margin-top:3px;">Row 1 = Headers, Row 2 onwards = Data</div>
+        </div>
         <input class="fi" type="file" id="pi-file" accept=".xlsx,.xls,.csv"/>
         <div id="pi-ferr" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin:10px 0;"></div>
         <button class="btn bg bfl" style="margin-top:10px;" onclick="uploadImeiExcel()">📤 Upload & Submit</button>
@@ -1267,8 +1428,10 @@ function uploadImeiExcel(){
       const dupList=[];
       rows.forEach(r=>{
         const keys=Object.keys(r);
-        const imeiKey=keys.find(k=>k.toLowerCase().replace(/\s/g,'').includes('imei'))||keys[0];
-        const amtKey=keys.find(k=>k.toLowerCase().replace(/\s/g,'').includes('amount')||k.toLowerCase().replace(/\s/g,'').includes('payable'))||keys[1];
+        // Support format: Sr#, IMEI, Amount (columns 0,1,2) OR flexible key matching
+        const srKey=keys.find(k=>k.toLowerCase().replace(/[\s#]/g,'').includes('sr')||k.toLowerCase().includes('serial')||k.toLowerCase().includes('no'));
+        const imeiKey=keys.find(k=>k.toLowerCase().replace(/\s/g,'').includes('imei'))||keys[1]||keys[0];
+        const amtKey=keys.find(k=>k.toLowerCase().replace(/\s/g,'').includes('amount')||k.toLowerCase().replace(/\s/g,'').includes('payable'))||keys[2]||keys[1];
         let imei=String(r[imeiKey]||'').trim().replace(/\.0$/,'');
         const amt=Number(r[amtKey]);
         if(!/^[0-9]{14,17}$/.test(imei)||!amt||amt<=0){invalid++;return;}
@@ -1316,10 +1479,43 @@ function renderImeis(){
   if(pillsEl)pillsEl.innerHTML=imeiPillsHTML();
   renderPtaControls();
   const q=(document.getElementById('pta-search')||{}).value||'';
-  document.getElementById('pta-total').textContent=S.imeis.length;
-  document.getElementById('pta-pending').textContent=S.role==='superadmin'?S.imeis.filter(x=>x.status==='pending'||x.status==='recommended').length:S.imeis.filter(x=>x.status==='pending').length;
-  let list=S.imeis;
-  if(S.role==='pta')list=list.filter(x=>x.addedBy===S.uid);
+
+  // Show correct stats section
+  const dash=document.getElementById('pta-dashboard');
+  const simpleStats=document.getElementById('pta-simple-stats');
+
+  let allImeis=S.imeis;
+  let myImeis=(S.role==='pta')?allImeis.filter(x=>x.addedBy===S.uid):allImeis;
+
+  if(S.role==='pta'){
+    if(dash)dash.style.display='none';
+    if(simpleStats)simpleStats.style.display='block';
+    const ptTot=document.getElementById('pta-total');
+    const ptPend=document.getElementById('pta-pending');
+    if(ptTot)ptTot.textContent=myImeis.length;
+    if(ptPend)ptPend.textContent=myImeis.filter(x=>x.status==='pending').length;
+    // Show read-only customers list for PTA
+    const ptaCustSec=document.getElementById('pta-cust-section');
+    if(ptaCustSec)ptaCustSec.style.display='block';
+    renderPtaCusts();
+  } else {
+    if(dash)dash.style.display='block';
+    if(simpleStats)simpleStats.style.display='none';
+    const ptTot=document.getElementById('pta-total');
+    const ptPend=document.getElementById('pta-pending');
+    const ptAppr=document.getElementById('pta-approved');
+    const ptRej=document.getElementById('pta-rejected');
+    const ptAmt=document.getElementById('pta-total-amt');
+    const ptApprAmt=document.getElementById('pta-appr-amt');
+    if(ptTot)ptTot.textContent=allImeis.length;
+    if(ptPend)ptPend.textContent=(S.role==='superadmin')?allImeis.filter(x=>x.status==='pending'||x.status==='recommended').length:allImeis.filter(x=>x.status==='pending').length;
+    if(ptAppr)ptAppr.textContent=allImeis.filter(x=>x.status==='approved').length;
+    if(ptRej)ptRej.textContent=allImeis.filter(x=>x.status==='rejected').length;
+    if(ptAmt)ptAmt.textContent=fmt(allImeis.reduce((s,x)=>s+x.amount,0));
+    if(ptApprAmt)ptApprAmt.textContent=fmt(allImeis.filter(x=>x.status==='approved').reduce((s,x)=>s+x.amount,0));
+  }
+
+  let list=S.role==='pta'?myImeis:allImeis;
   list=list.filter(x=>{
     const mq=!q||x.imei.includes(q);
     return mq&&(S.imeiFilter==='all'||x.status===S.imeiFilter);
@@ -1351,12 +1547,35 @@ function renderImeis(){
     }).join('');
 }
 
+function renderPtaCusts(){
+  const el=document.getElementById('pta-custs-list');if(!el)return;
+  const q=(document.getElementById('pta-csearch')||{}).value||'';
+  const list=S.custs.filter(c=>{
+    return !q||c.name.toLowerCase().includes(q.toLowerCase())||c.mobile.includes(q)||c.block.toLowerCase().includes(q.toLowerCase())||c.house.includes(q);
+  });
+  el.innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:24px 0;">No customers found</div>`:
+    list.map(c=>`<div class="card">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(255,107,0,.15);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🛡</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:800;">H# ${c.house}, Block ${c.block}</div>
+          <div style="font-size:13px;font-weight:600;margin-top:1px;">${c.name}</div>
+          <div style="color:var(--mut);font-size:11px;">${c.mobile}</div>
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+            <span style="color:var(--or);font-size:10px;font-weight:700;">📍 ${c.project}</span>
+            <span class="bdg" style="background:${c.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${c.status==='active'?'var(--grn)':'var(--red)'};">${c.status}</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
 function showToast(msg,type="success"){
   const t=document.getElementById('toast');t.textContent=msg;t.style.display="block";
   t.style.background=type==="success"?"#22C55E":type==="error"?"#EF4444":type==="warn"?"#D97706":"#F59E0B";
   t.style.color="#fff";setTimeout(()=>t.style.display="none",2800);
 }
-function renderAll(){if(S.role==='pta'){renderImeis();return;}renderDash();renderCusts();renderInvoices();if(S.role!=='user')renderReports();if(S.role==='superadmin'){renderUsers();renderApprovals();}}
+function renderAll(){if(S.role==='pta'){renderImeis();return;}renderDash();renderCusts();renderInvoices();if(S.role!=='user')renderReports();if(S.role==='superadmin'){renderUsers();renderApprovals();}if(S.role==='admin')renderApprovals();}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
