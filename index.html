@@ -131,7 +131,7 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
       <div style="font-size:20px;font-weight:900;">Customers <span style="color:var(--mut);font-size:14px;" id="ccount"></span></div>
       <button class="btn bor bsm" onclick="openM('add-cust')">+ Add</button>
     </div>
-    <div class="sb"><span>🔍</span><input id="csearch" placeholder="Name, mobile, CNIC, house, block…" oninput="renderCusts()"/><button onclick="document.getElementById('csearch').value='';renderCusts()" style="background:none;border:none;cursor:pointer;color:var(--mut);">✕</button></div>
+    <div class="sb"><span>🔍</span><input id="csearch" placeholder="Name, mobile, Device SN, house, block…" oninput="renderCusts()"/><button onclick="document.getElementById('csearch').value='';renderCusts()" style="background:none;border:none;cursor:pointer;color:var(--mut);">✕</button></div>
     <div class="pills" id="proj-pills">
       <button class="pill act" onclick="setProjFilter('all',this)">All</button>
     </div>
@@ -160,14 +160,33 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
   <!-- REPORTS -->
   <div id="tab-reports" class="screen">
     <div style="font-size:20px;font-weight:900;margin-bottom:16px;">Reports</div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="stl" style="margin-bottom:8px;">Date Range</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+        <div class="fw" style="margin-bottom:0;"><label class="fl">From</label><input class="fi" type="date" id="rep-from" onchange="renderReports()"/></div>
+        <div class="fw" style="margin-bottom:0;"><label class="fl">To</label><input class="fi" type="date" id="rep-to" onchange="renderReports()"/></div>
+      </div>
+      <button class="btn bsm bo" onclick="document.getElementById('rep-from').value='';document.getElementById('rep-to').value='';renderReports()">Clear Range</button>
+    </div>
     <div class="sgrid">
-      <div class="sc"><div class="sl">Total Revenue</div><div class="sv" style="color:var(--grn);font-size:14px;" id="r-rev">₨0</div></div>
-      <div class="sc"><div class="sl">Outstanding</div><div class="sv" style="color:var(--red);font-size:14px;" id="r-out">₨0</div></div>
-      <div class="sc"><div class="sl">Installations</div><div class="sv" style="color:var(--or);" id="r-inst">0</div></div>
-      <div class="sc"><div class="sl">This Month</div><div class="sv" style="color:var(--blu);font-size:14px;" id="r-mnth">₨0</div></div>
+      <div class="sc" style="cursor:pointer;" onclick="openReportDetail('revenue')"><div class="sl">Total Revenue</div><div class="sv" style="color:var(--grn);font-size:14px;" id="r-rev">₨0</div></div>
+      <div class="sc" style="cursor:pointer;" onclick="openReportDetail('outstanding')"><div class="sl">Outstanding</div><div class="sv" style="color:var(--red);font-size:14px;" id="r-out">₨0</div></div>
+      <div class="sc" style="cursor:pointer;" onclick="openReportDetail('installations')"><div class="sl">Installations</div><div class="sv" style="color:var(--or);" id="r-inst">0</div></div>
+      <div class="sc" style="cursor:pointer;" onclick="openReportDetail('month')"><div class="sl">This Month</div><div class="sv" style="color:var(--blu);font-size:14px;" id="r-mnth">₨0</div></div>
     </div>
     <div class="card" style="margin-bottom:12px;"><div class="stl">Customers by Project</div><div id="proj-report"></div></div>
     <div class="card"><div class="stl">Invoice Summary</div><div style="display:flex;justify-content:space-around;" id="inv-summary"></div></div>
+  </div>
+
+  <!-- APPROVALS -->
+  <div id="tab-approvals" class="screen">
+    <div style="font-size:20px;font-weight:900;margin-bottom:14px;">Pending Approvals</div>
+    <div class="pills" id="appr-pills">
+      <button class="pill act" onclick="setPendFilter('pending',this)">Pending</button>
+      <button class="pill" onclick="setPendFilter('approved',this)">Approved</button>
+      <button class="pill" onclick="setPendFilter('rejected',this)">Rejected</button>
+    </div>
+    <div id="approvals-list"></div>
   </div>
 
   <!-- USERS -->
@@ -240,7 +259,8 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
   <button class="nb" onclick="goTab('dash')"><div class="ni act" id="ni-dash">🏠</div><span class="nl act" id="nl-dash">Home</span></button>
   <button class="nb" onclick="goTab('customers')"><div class="ni" id="ni-customers">👥</div><span class="nl" id="nl-customers">Customers</span></button>
   <button class="nb" onclick="goTab('invoices')"><div class="ni" id="ni-invoices">🧾</div><span class="nl" id="nl-invoices">Invoices</span></button>
-  <button class="nb" onclick="goTab('reports')"><div class="ni" id="ni-reports">📊</div><span class="nl" id="nl-reports">Reports</span></button>
+  <button class="nb" id="nb-reports" onclick="goTab('reports')"><div class="ni" id="ni-reports">📊</div><span class="nl" id="nl-reports">Reports</span></button>
+  <button class="nb" id="nb-approvals" style="display:none;" onclick="goTab('approvals')"><div class="ni" id="ni-approvals">✅</div><span class="nl" id="nl-approvals">Approvals</span></button>
   <button class="nb" id="nb-users" style="display:none;" onclick="goTab('users')"><div class="ni" id="ni-users">👤</div><span class="nl" id="nl-users">Users</span></button>
   <button class="nb" id="nb-activity" style="display:none;" onclick="goTab('activity')"><div class="ni" id="ni-activity">📈</div><span class="nl" id="nl-activity">Activity</span></button>
   <button class="nb" id="nb-pta" style="display:none;" onclick="goTab('pta')"><div class="ni" id="ni-pta">📲</div><span class="nl" id="nl-pta">PTA IMEI</span></button>
@@ -265,7 +285,9 @@ const ITEMS=[
   {id:"battery",name:"Battery",price:500},
   {id:"cell",name:"Cell",price:200},
   {id:"sos_button",name:"SOS Button",price:350},
+  {id:"panic_button",name:"Panic Button",price:350},
   {id:"power_supply",name:"Power Supply",price:700},
+  {id:"wiring",name:"Wiring Charges",price:1000},
   {id:"installation",name:"Installation Charges",price:1500},
 ];
 const PROJECTS=["Bahria Mohlanwal","Bahria Orchard","Bahria EMC","Bahria Nasheman"];
@@ -286,7 +308,8 @@ function loadS(){return{
     {id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"},
   ],
   imeis:JSON.parse(localStorage.getItem('alm_imeis')||'[]'),
-  projFilter:'all', invFilter:'all', imeiFilter:'all',
+  pendingEdits:JSON.parse(localStorage.getItem('alm_pending')||'[]'),
+  projFilter:'all', invFilter:'all', imeiFilter:'all', pendFilter:'pending',
 };}
 let S=loadS();
 if(!S.users.find(u=>u.role==='pta')){
@@ -299,13 +322,14 @@ function sv(){
   localStorage.setItem('alm_prices',JSON.stringify(S.prices));
   localStorage.setItem('alm_users',JSON.stringify(S.users));
   localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
+  localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
 }
 
 if(S.custs.length===0){
   S.custs=[
-    {id:"A001",name:"Bilal Khan",mobile:"0321-9876543",cnic:"35202-7654321-1",house:"45",street:"2",block:"C",project:"Bahria EMC",installDate:"2024-05-20",notes:"4 door contacts, backyard",status:"active"},
-    {id:"A002",name:"Sara Ali",mobile:"0333-4567890",cnic:"35202-1122334-2",house:"7",street:"1",block:"A",project:"Bahria Nasheman",installDate:"2024-01-10",notes:"",status:"inactive"},
-    {id:"A003",name:"Usman Tariq",mobile:"0345-1122334",cnic:"35202-5566778-3",house:"33",street:"8",block:"D",project:"Bahria Mohlanwal",installDate:"2024-07-01",notes:"Kitchen smoke detectors",status:"active"},
+    {id:"A001",name:"Bilal Khan",mobile:"0321-9876543",house:"45",street:"2",block:"C",project:"Bahria EMC",installDate:"2024-05-20",notes:"4 door contacts, backyard",status:"active"},
+    {id:"A002",name:"Sara Ali",mobile:"0333-4567890",house:"7",street:"1",block:"A",project:"Bahria Nasheman",installDate:"2024-01-10",notes:"",status:"inactive"},
+    {id:"A003",name:"Usman Tariq",mobile:"0345-1122334",house:"33",street:"8",block:"D",project:"Bahria Mohlanwal",installDate:"2024-07-01",notes:"Kitchen smoke detectors",status:"active"},
   ];
   S.invoices=[
     {id:"ALM-001",custId:"A001",date:"2025-05-20",items:[{name:"Alarm Panel",qty:1,price:3500},{name:"Door Contact",qty:4,price:450},{name:"Installation Charges",qty:1,price:1500}],status:"unpaid",total:6800},
@@ -339,7 +363,11 @@ function doLogin(){
   document.getElementById('sname').textContent=user.name;
   if(S.role==='superadmin')document.getElementById('nb-users').style.display='flex';
   if(S.role==='superadmin'||S.role==='admin')document.getElementById('nb-activity').style.display='flex';
-  if(S.role==='user'){document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';}
+  if(S.role==='superadmin')document.getElementById('nb-approvals').style.display='flex';
+  if(S.role==='user'){
+    document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';
+    document.getElementById('nb-reports').style.display='none';
+  }
   if(S.role==='pta'){
     document.getElementById('price-settings').style.display='none';document.getElementById('no-set').style.display='block';
     document.querySelectorAll('#bnav .nb').forEach(b=>b.style.display='none');
@@ -360,10 +388,12 @@ function doLogout(){
   document.getElementById('nb-pta').style.display='none';
   document.getElementById('nb-users').style.display='none';
   document.getElementById('nb-activity').style.display='none';
+  document.getElementById('nb-approvals').style.display='none';
+  document.getElementById('nb-reports').style.display='flex';
   document.getElementById('price-settings').style.display='block';document.getElementById('no-set').style.display='none';
 }
 
-const TABS=['dash','customers','invoices','reports','users','settings','pta','activity'];
+const TABS=['dash','customers','invoices','reports','users','settings','pta','activity','approvals'];
 function goTab(t){
   TABS.forEach(x=>{
     const s=document.getElementById('tab-'+x),ni=document.getElementById('ni-'+x),nl=document.getElementById('nl-'+x);
@@ -378,15 +408,44 @@ function goTab(t){
   if(t==='users')renderUsers();
   if(t==='activity')renderActivity();
   if(t==='pta')renderImeis();
+  if(t==='approvals')renderApprovals();
 }
 
 function renderDash(){
+  if(S.role==='user'){
+    const myCusts=S.custs.filter(c=>c.createdBy===S.uid);
+    const myInvs=S.invoices.filter(i=>i.createdBy===S.uid);
+    document.getElementById('s-total').textContent=myCusts.length;
+    document.getElementById('s-active').textContent=myCusts.filter(c=>c.status==='active').length;
+    document.getElementById('s-rev').textContent=myInvs.length;
+    document.getElementById('s-inv').textContent=myInvs.filter(i=>i.status==='unpaid').length;
+    const sl=document.getElementById('s-rev').closest('.sc');
+    if(sl)sl.querySelector('.sl').textContent='My Invoices';
+    const sl3=document.getElementById('s-inv').closest('.sc');
+    if(sl3)sl3.querySelector('.sl').textContent='My Unpaid';
+    const recent=myInvs.slice(0,5);
+    document.getElementById('recent-list').innerHTML=recent.length===0?`<div style="color:var(--mut);text-align:center;padding:16px 0;">No invoices yet</div>`:
+      recent.map(inv=>{
+        const c=S.custs.find(x=>x.id===inv.custId);
+        return `<div class="c2" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="openInvDetail('${inv.id}')">
+          <div><div style="font-size:13px;font-weight:700;">${c?.name||'—'}</div>
+          <div style="color:var(--mut);font-size:11px;">${inv.id} · ${inv.date}</div></div>
+          <div style="text-align:right;"><div style="color:var(--or);font-size:14px;font-weight:800;">${fmt(inv.total)}</div>
+          <span class="bdg" style="background:${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${inv.status==='paid'?'var(--grn)':'var(--red)'};">${inv.status}</span></div>
+        </div>`;
+      }).join('');
+    return;
+  }
   const rev=S.invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.total,0);
   const upaid=S.invoices.filter(i=>i.status==='unpaid').length;
   document.getElementById('s-total').textContent=S.custs.length;
   document.getElementById('s-active').textContent=S.custs.filter(c=>c.status==='active').length;
   document.getElementById('s-rev').textContent=fmt(rev);
   document.getElementById('s-inv').textContent=upaid;
+  const sl2=document.getElementById('s-rev').closest('.sc');
+  if(sl2)sl2.querySelector('.sl').textContent='Total Revenue';
+  const sl4=document.getElementById('s-inv').closest('.sc');
+  if(sl4)sl4.querySelector('.sl').textContent='Unpaid Invoices';
   const recent=S.invoices.slice(0,5);
   document.getElementById('recent-list').innerHTML=recent.length===0?`<div style="color:var(--mut);text-align:center;padding:16px 0;">No invoices yet</div>`:
     recent.map(inv=>{
@@ -413,8 +472,10 @@ function setProjFilter(f,btn){
 
 function renderCusts(){
   const q=(document.getElementById('csearch')||{}).value||'';
-  const list=S.custs.filter(c=>{
-    const mq=!q||c.name.toLowerCase().includes(q.toLowerCase())||c.mobile.includes(q)||c.house.includes(q)||c.block.toLowerCase().includes(q.toLowerCase())||(c.cnic||'').includes(q);
+  let base=S.custs;
+  if(S.role==='user')base=base.filter(c=>c.createdBy===S.uid);
+  const list=base.filter(c=>{
+    const mq=!q||c.name.toLowerCase().includes(q.toLowerCase())||c.mobile.includes(q)||c.house.includes(q)||c.block.toLowerCase().includes(q.toLowerCase())||(c.imei||'').toLowerCase().includes(q.toLowerCase());
     return mq&&(S.projFilter==='all'||c.project===S.projFilter);
   });
   document.getElementById('ccount').textContent=`(${list.length})`;
@@ -424,7 +485,8 @@ function renderCusts(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div style="display:flex;gap:10px;align-items:center;">
           <div style="width:42px;height:42px;border-radius:11px;background:rgba(255,107,0,.2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🛡</div>
-          <div><div style="font-size:15px;font-weight:800;">${c.name}</div>
+          <div><div style="font-size:15px;font-weight:900;">H# ${c.house}, Block ${c.block}</div>
+          <div style="font-size:13px;font-weight:700;margin-top:2px;">${c.name}</div>
           <div style="color:var(--mut);font-size:11px;">${c.mobile}</div>
           <div style="color:var(--or);font-size:11px;font-weight:700;">📅 Installed: ${c.installDate}</div></div>
         </div>
@@ -432,7 +494,6 @@ function renderCusts(){
       </div>
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);display:flex;gap:12px;flex-wrap:wrap;">
         <span style="color:var(--mut);font-size:11px;">📍 ${c.project}</span>
-        <span style="color:var(--mut);font-size:11px;">Block ${c.block} · H# ${c.house}</span>
       </div>
     </div>`).join('');
 }
@@ -444,10 +505,11 @@ function openCustDetail(id){
   document.getElementById('mbody').innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
       <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,107,0,.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🛡</div>
-      <div><div style="font-size:17px;font-weight:900;">${c.name}</div>
+      <div><div style="font-size:17px;font-weight:900;">H# ${c.house}, Block ${c.block}</div>
+      <div style="font-size:13px;font-weight:700;color:var(--mut);margin-top:2px;">${c.name}</div>
       <span class="bdg" style="background:${c.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${c.status==='active'?'var(--grn)':'var(--red)'};">${c.status}</span></div>
     </div>
-    ${[['📞','Mobile',c.mobile],['🪪','CNIC',c.cnic||'—'],c.imei?['📲','IMEI',c.imei]:null,['🏠','Address',`H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}`],
+    ${[['📞','Mobile',c.mobile],['📲','Device SN',c.imei||'—'],['🏠','Address',`H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}`],
       ['📍','Project',c.project],['📅','Install Date',c.installDate],c.notes?['📝','Notes',c.notes]:null
     ].filter(Boolean).map(([i,l,v])=>`
       <div style="padding:8px 0;border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-start;">
@@ -462,17 +524,24 @@ function openCustDetail(id){
       ${invs.map(inv=>`<div class="c2" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="closeM();openInvDetail('${inv.id}')">
         <div><div style="font-size:13px;font-weight:700;">${inv.id}</div><div style="color:var(--mut);font-size:11px;">${inv.date} · ${inv.items.length} items</div></div>
         <div style="text-align:right;"><div style="color:var(--or);font-size:14px;font-weight:800;">${fmt(inv.total)}</div>
-        <button onclick="event.stopPropagation();toggleInv('${inv.id}')" style="background:none;border:1.5px solid ${inv.status==='paid'?'var(--grn)':'var(--red)'};border-radius:6px;padding:2px 8px;cursor:pointer;color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700;font-family:'Barlow',sans-serif;">${inv.status==='paid'?'✓ PAID':'UNPAID'}</button></div>
+        ${canTogglePay(inv)?`<button onclick="event.stopPropagation();toggleInv('${inv.id}')" style="background:none;border:1.5px solid ${inv.status==='paid'?'var(--grn)':'var(--red)'};border-radius:6px;padding:2px 8px;cursor:pointer;color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700;font-family:'Barlow',sans-serif;">${inv.status==='paid'?'✓ PAID':'UNPAID'}</button>`:`<span class="bdg" style="background:${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${inv.status==='paid'?'var(--grn)':'var(--red)'};">${inv.status==='paid'?'PAID':'UNPAID'}</span>`}</div>
       </div>`).join('')}
     </div>
     <div style="display:flex;gap:8px;margin-top:14px;">
       <button class="btn bsm" style="background:rgba(255,107,0,.15);color:var(--or);border:none;" onclick="closeM();openM('edit-cust','${c.id}')">✏ Edit</button>
-      ${S.role==='superadmin'||S.role==='admin'?`<button class="btn bsm br" onclick="if(confirm('Delete?')){delCust('${c.id}')}">🗑 Delete</button>`:''}
+      ${S.role==='superadmin'||S.role==='admin'?`<button class="btn bsm br" onclick="if(confirm('Delete?')){delCust('${c.id}')}">🗑 ${S.role==='admin'?'Request Delete':'Delete'}</button>`:''}
     </div>
   `;
   openM();
 }
-function delCust(id){S.custs=S.custs.filter(c=>c.id!==id);sv();closeM();renderCusts();renderDash();showToast("Deleted","error");}
+function delCust(id){
+  const c=S.custs.find(x=>x.id===id);if(!c)return;
+  if(S.role==='admin'){
+    requestDelete('customer',id,`H# ${c.house}, Block ${c.block} — ${c.name}`);
+    closeM();return;
+  }
+  S.custs=S.custs.filter(x=>x.id!==id);sv();closeM();renderCusts();renderDash();showToast("Deleted","error");
+}
 
 function setInvFilter(f,btn){
   S.invFilter=f;
@@ -481,10 +550,12 @@ function setInvFilter(f,btn){
 }
 function renderInvoices(){
   const q=(document.getElementById('isearch')||{}).value||'';
-  const upaidTotal=S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.total,0);
+  let base=S.invoices;
+  if(S.role==='user')base=base.filter(i=>i.createdBy===S.uid);
+  const upaidTotal=base.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.total,0);
   const ub=document.getElementById('upaid-bar');
   if(upaidTotal>0){ub.style.display='flex';document.getElementById('upaid-amt').textContent=fmt(upaidTotal);}else ub.style.display='none';
-  const list=S.invoices.filter(i=>{
+  const list=base.filter(i=>{
     const c=S.custs.find(x=>x.id===i.custId);
     const mq=!q||i.id.toLowerCase().includes(q.toLowerCase())||(c&&c.name.toLowerCase().includes(q.toLowerCase()));
     return mq&&(S.invFilter==='all'||i.status===S.invFilter);
@@ -498,7 +569,7 @@ function renderInvoices(){
           <div style="color:var(--mut);font-size:11px;">${inv.id} · ${inv.date}</div>
           <div style="color:var(--mut);font-size:11px;">${inv.items.length} items · ${c?.project||'—'}</div></div>
           <div style="text-align:right;"><div style="color:var(--or);font-size:16px;font-weight:900;">${fmt(inv.total)}</div>
-          <button onclick="event.stopPropagation();toggleInv('${inv.id}')" style="margin-top:4px;background:none;border:1.5px solid ${inv.status==='paid'?'var(--grn)':'var(--red)'};border-radius:6px;padding:3px 9px;cursor:pointer;color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700;font-family:'Barlow',sans-serif;">${inv.status==='paid'?'✓ PAID':'UNPAID'}</button></div>
+          ${canTogglePay(inv)?`<button onclick="event.stopPropagation();toggleInv('${inv.id}')" style="margin-top:4px;background:none;border:1.5px solid ${inv.status==='paid'?'var(--grn)':'var(--red)'};border-radius:6px;padding:3px 9px;cursor:pointer;color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:10px;font-weight:700;font-family:'Barlow',sans-serif;">${inv.status==='paid'?'✓ PAID':'UNPAID'}</button>`:`<span class="bdg" style="margin-top:4px;background:${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${inv.status==='paid'?'var(--grn)':'var(--red)'};">${inv.status==='paid'?'PAID':'UNPAID'}</span>`}</div>
         </div>
       </div>`;
     }).join('');
@@ -529,7 +600,7 @@ function openInvDetail(id){
           <div style="color:var(--mut);font-size:12px;">${c.mobile}</div>
           <div style="color:var(--mut);font-size:12px;">H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}</div>
           <div style="color:var(--mut);font-size:12px;">${c.project}</div>
-          ${c.cnic?`<div style="color:var(--mut);font-size:12px;">CNIC: ${c.cnic}</div>`:''}
+          ${c.imei?`<div style="color:var(--mut);font-size:12px;">Device SN: ${c.imei}</div>`:''}
         </div>
         ${inv.items.map((item,i)=>`<div style="display:flex;justify-content:space-between;padding:8px 0;${i<inv.items.length-1?'border-bottom:1px solid var(--bdr)':''}">
           <div><div style="font-size:13px;">${item.name}</div><div style="color:var(--mut);font-size:11px;">Qty ${item.qty} × ${fmt(item.price)}</div></div>
@@ -548,9 +619,9 @@ function openInvDetail(id){
       <button class="btn bfl" style="background:#25D366;color:#fff;flex:1;" onclick="waInv('${inv.id}')">💬 WhatsApp</button>
       <button class="btn bfl" style="background:var(--blu);color:#fff;flex:1;" onclick="printInv('${inv.id}')">🖨 Print</button>
     </div>
-    <button class="btn bfl" style="background:transparent;border:1.5px solid ${inv.status==='paid'?'var(--red)':'var(--grn)'};color:${inv.status==='paid'?'var(--red)':'var(--grn)'};" id="tog-btn" onclick="toggleInv('${inv.id}');refreshBdg('${inv.id}')">
+    ${canTogglePay(inv)?`<button class="btn bfl" style="background:transparent;border:1.5px solid ${inv.status==='paid'?'var(--red)':'var(--grn)'};color:${inv.status==='paid'?'var(--red)':'var(--grn)'};" id="tog-btn" onclick="toggleInv('${inv.id}');refreshBdg('${inv.id}')">
       ${inv.status==='paid'?'Mark as Unpaid':'✓ Mark as Paid'}
-    </button>
+    </button>`:''}
   `;
   openM();
 }
@@ -560,27 +631,71 @@ function refreshBdg(id){
   if(b){b.style.background=inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)';b.style.color=inv.status==='paid'?'var(--grn)':'var(--red)';b.textContent=inv.status==='paid'?'✓ PAID':'⚠ UNPAID';}
   if(btn){btn.style.borderColor=inv.status==='paid'?'var(--red)':'var(--grn)';btn.style.color=inv.status==='paid'?'var(--red)':'var(--grn)';btn.textContent=inv.status==='paid'?'Mark as Unpaid':'✓ Mark as Paid';}
 }
+function canTogglePay(inv){
+  if(S.role==='superadmin')return true;
+  if(S.role==='admin')return inv.createdBy===S.uid;
+  return false;
+}
 function toggleInv(id){
+  const inv=S.invoices.find(i=>i.id===id);if(!inv)return;
+  if(!canTogglePay(inv)){showToast("Sirf Super Admin ya invoice banane wala Admin status badal sakta hai","error");return;}
   S.invoices=S.invoices.map(i=>i.id===id?{...i,status:i.status==='paid'?'unpaid':'paid'}:i);
   sv();renderInvoices();renderDash();showToast("Status updated! ✓");
 }
 
+function repInRange(dateStr){
+  const from=document.getElementById('rep-from')?.value||'';
+  const to=document.getElementById('rep-to')?.value||'';
+  if(from&&dateStr<from)return false;
+  if(to&&dateStr>to)return false;
+  return true;
+}
+function repInvoices(){return S.invoices.filter(i=>repInRange(i.date));}
+function repCusts(){return S.custs.filter(c=>repInRange(c.installDate));}
 function renderReports(){
-  const rev=S.invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.total,0);
-  const out=S.invoices.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.total,0);
+  if(S.role==='user'){return;}
+  const invs=repInvoices(),custs=repCusts();
+  const rev=invs.filter(i=>i.status==='paid').reduce((s,i)=>s+i.total,0);
+  const out=invs.filter(i=>i.status==='unpaid').reduce((s,i)=>s+i.total,0);
   const cm=curMonth();
-  const mnth=S.invoices.filter(i=>i.status==='paid'&&i.date.startsWith(cm)).reduce((s,i)=>s+i.total,0);
+  const mnth=invs.filter(i=>i.status==='paid'&&i.date.startsWith(cm)).reduce((s,i)=>s+i.total,0);
   document.getElementById('r-rev').textContent=fmt(rev);
   document.getElementById('r-out').textContent=fmt(out);
-  document.getElementById('r-inst').textContent=S.custs.length;
+  document.getElementById('r-inst').textContent=custs.length;
   document.getElementById('r-mnth').textContent=fmt(mnth);
-  const maxC=Math.max(...PROJECTS.map(p=>S.custs.filter(c=>c.project===p).length),1);
+  const maxC=Math.max(...PROJECTS.map(p=>custs.filter(c=>c.project===p).length),1);
   document.getElementById('proj-report').innerHTML=PROJECTS.map(p=>{
-    const count=S.custs.filter(c=>c.project===p).length;
+    const count=custs.filter(c=>c.project===p).length;
     return `<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:600;">${p}</span><span style="color:var(--or);font-size:12px;font-weight:800;">${count}</span></div><div class="pb"><div class="pf" style="width:${(count/maxC)*100}%"></div></div></div>`;
   }).join('');
-  const tot=S.invoices.length,pc=S.invoices.filter(i=>i.status==='paid').length,uc=S.invoices.filter(i=>i.status==='unpaid').length;
+  const tot=invs.length,pc=invs.filter(i=>i.status==='paid').length,uc=invs.filter(i=>i.status==='unpaid').length;
   document.getElementById('inv-summary').innerHTML=[["Total",tot,"var(--txt)"],["Paid",pc,"var(--grn)"],["Unpaid",uc,"var(--red)"]].map(([l,v,c])=>`<div style="text-align:center;"><div style="color:${c};font-size:28px;font-weight:900;">${v}</div><div style="color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:1px;">${l}</div></div>`).join('');
+}
+function openReportDetail(kind){
+  const invs=repInvoices(),custs=repCusts();
+  let title='',list=[],isInv=true;
+  if(kind==='revenue'){title='Revenue (Paid Invoices)';list=invs.filter(i=>i.status==='paid');}
+  else if(kind==='outstanding'){title='Outstanding (Unpaid Invoices)';list=invs.filter(i=>i.status==='unpaid');}
+  else if(kind==='month'){const cm=curMonth();title='This Month (Paid)';list=invs.filter(i=>i.status==='paid'&&i.date.startsWith(cm));}
+  else if(kind==='installations'){title='Installations (Customers)';list=custs;isInv=false;}
+  document.getElementById('mtitle').textContent=title;
+  if(isInv){
+    document.getElementById('mbody').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:24px 0;">No records</div>`:
+      list.map(inv=>{
+        const c=S.custs.find(x=>x.id===inv.custId);
+        return `<div class="c2" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="closeM();openInvDetail('${inv.id}')">
+          <div><div style="font-size:13px;font-weight:700;">${c?.name||'—'}</div><div style="color:var(--mut);font-size:11px;">${inv.id} · ${inv.date}</div></div>
+          <div style="color:var(--or);font-size:14px;font-weight:800;">${fmt(inv.total)}</div>
+        </div>`;
+      }).join('');
+  } else {
+    document.getElementById('mbody').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:24px 0;">No records</div>`:
+      list.map(c=>`<div class="c2" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="closeM();openCustDetail('${c.id}')">
+        <div><div style="font-size:13px;font-weight:700;">H# ${c.house}, Block ${c.block}</div><div style="color:var(--mut);font-size:11px;">${c.name} · ${c.installDate}</div></div>
+        <span style="color:var(--mut);font-size:11px;">${c.project}</span>
+      </div>`).join('');
+  }
+  openM();
 }
 
 // New invoice form
@@ -625,7 +740,7 @@ function showNewInvoice(preCust){
       </div>
       <div class="fw"><label class="fl">Block *</label><input class="fi" id="db" placeholder="B"/></div>
       <div class="fw"><label class="fl">Project *</label><select class="fi" id="dpr">${PROJECTS.map(p=>`<option>${p}</option>`).join('')}</select></div>
-      <div class="fw"><label class="fl">IMEI</label><input class="fi" id="dimei" placeholder="Device IMEI" maxlength="20"/></div>
+      <div class="fw"><label class="fl">Device SN</label><input class="fi" id="dimei" placeholder="Device Serial Number" maxlength="30"/></div>
       <button class="btn bsm bo" onclick="toggleDirectInvoice()">← Select Existing Customer Instead</button>
     </div>
     <div class="stl" style="margin-top:10px;" id="items-title">Select Items & Quantities</div>
@@ -719,7 +834,8 @@ function saveInvoice(){
     const name=document.getElementById('dn').value.trim(),mobile=document.getElementById('dm').value.trim();
     const house=document.getElementById('dh').value.trim(),block=document.getElementById('db').value.trim();
     if(!name||!mobile||!house||!block){showToast("Customer Name, Mobile, House, Block required!","error");return;}
-    const newCust={id:"A"+String(Date.now()).slice(-6),name,mobile,cnic:'',imei:document.getElementById('dimei').value.trim(),house,street:document.getElementById('ds').value.trim(),block,project:document.getElementById('dpr').value,installDate:todayStr(),notes:'Direct invoice — auto added',status:"active"};
+    const _u2=S.users.find(u=>u.id===S.uid)||{};
+    const newCust={id:"A"+String(Date.now()).slice(-6),name,mobile,imei:document.getElementById('dimei').value.trim(),house,street:document.getElementById('ds').value.trim(),block,project:document.getElementById('dpr').value,installDate:todayStr(),notes:'Direct invoice — auto added',status:"active",createdBy:S.uid,createdByName:_u2.name||''};
     S.custs.unshift(newCust);custId=newCust.id;
     buildProjPills();
   } else {
@@ -754,7 +870,7 @@ function genInvPdf(inv,c){
   doc.text('Mobile: '+c.mobile,20,y);y+=14;
   doc.text('Address: H# '+c.house+', Block '+c.block+(c.street?', St '+c.street:''),20,y);y+=14;
   doc.text('Project: '+c.project,20,y);y+=14;
-  if(c.cnic){doc.text('CNIC: '+c.cnic,20,y);y+=14;}
+  if(c.imei){doc.text('Device SN: '+c.imei,20,y);y+=14;}
   y+=6;
   doc.setDrawColor(220,220,220);doc.line(20,y,280,y);y+=16;
   doc.setFont('helvetica','bold');doc.text('Item',20,y);doc.text('Qty',180,y);doc.text('Amount',230,y);y+=10;
@@ -803,7 +919,7 @@ function printInv(id){
   </div>
   <div style="background:#f8f8f8;padding:12px;border-radius:8px;margin-bottom:14px;">
     <div style="font-size:10px;color:#999;text-transform:uppercase;margin-bottom:6px;">Customer</div>
-    <b style="font-size:15px;">${c.name}</b><br>📞 ${c.mobile}<br>🏠 H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}<br>📍 ${c.project}${c.cnic?'<br>🪪 '+c.cnic:''}
+    <b style="font-size:15px;">${c.name}</b><br>📞 ${c.mobile}<br>🏠 H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}<br>📍 ${c.project}${c.imei?'<br>📲 SN: '+c.imei:''}
   </div>
   ${inv.items.map(i=>`<div class="row"><div>${i.name}<div style="color:#999;font-size:11px;">Qty ${i.qty} × ${fmt(i.price)}</div></div><b>${fmt(i.qty*i.price)}</b></div>`).join('')}
   <div class="total">Grand Total: ${fmt(inv.total)}</div>
@@ -879,6 +995,61 @@ function renderActivity(){
 
 function delUsr(id){S.users=S.users.filter(u=>u.id!==id);sv();renderUsers();showToast("Deleted","error");}
 
+// ===== APPROVALS (Admin requests -> Super Admin approval) =====
+function setPendFilter(f,btn){
+  S.pendFilter=f;
+  document.querySelectorAll('#appr-pills .pill').forEach(b=>b.classList.toggle('act',b===btn));
+  renderApprovals();
+}
+function genPendId(){return "PE"+String(Date.now()).slice(-7)+Math.floor(Math.random()*100);}
+function requestEdit(type,targetId,data,label){
+  const u=S.users.find(x=>x.id===S.uid)||{};
+  S.pendingEdits.unshift({id:genPendId(),type,action:'edit',targetId,data,label,requestedBy:S.uid,requestedByName:u.name||'',date:todayStr(),status:'pending'});
+  sv();showToast("Edit request Super Admin ko bhej diya ✓");
+}
+function requestDelete(type,targetId,label){
+  const u=S.users.find(x=>x.id===S.uid)||{};
+  S.pendingEdits.unshift({id:genPendId(),type,action:'delete',targetId,data:null,label,requestedBy:S.uid,requestedByName:u.name||'',date:todayStr(),status:'pending'});
+  sv();showToast("Delete request Super Admin ko bhej diya ✓");
+}
+function renderApprovals(){
+  if(S.role!=='superadmin')return;
+  const list=S.pendingEdits.filter(p=>p.status===S.pendFilter);
+  document.getElementById('approvals-list').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:32px 0;">No requests</div>`:
+    list.map(p=>{
+      const stColor=p.status==='approved'?'var(--grn)':p.status==='rejected'?'var(--red)':'var(--ylw)';
+      const stBg=p.status==='approved'?'rgba(34,197,94,.2)':p.status==='rejected'?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)';
+      return `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div><div style="font-size:13px;font-weight:800;">${p.action==='delete'?'🗑 Delete':'✏ Edit'} ${p.type==='customer'?'Customer':'Invoice'}</div>
+          <div style="color:var(--mut);font-size:11px;margin-top:2px;">${p.label||p.targetId}</div>
+          <div style="color:var(--mut);font-size:11px;margin-top:3px;">By ${p.requestedByName||'—'} · ${p.date}</div></div>
+          <span class="bdg" style="background:${stBg};color:${stColor};">${p.status}</span>
+        </div>
+        ${p.status==='pending'?`<div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn bsm bg bfl" onclick="approveEdit('${p.id}')">✓ Approve</button>
+          <button class="btn bsm br bfl" onclick="rejectEdit('${p.id}')">✕ Reject</button>
+        </div>`:''}
+      </div>`;
+    }).join('');
+}
+function approveEdit(id){
+  const p=S.pendingEdits.find(x=>x.id===id);if(!p||p.status!=='pending')return;
+  if(p.type==='customer'){
+    if(p.action==='delete'){S.custs=S.custs.filter(c=>c.id!==p.targetId);}
+    else if(p.action==='edit'){S.custs=S.custs.map(c=>c.id===p.targetId?{...c,...p.data}:c);}
+  } else if(p.type==='invoice'){
+    if(p.action==='delete'){S.invoices=S.invoices.filter(i=>i.id!==p.targetId);}
+    else if(p.action==='edit'){S.invoices=S.invoices.map(i=>i.id===p.targetId?{...i,...p.data}:i);}
+  }
+  S.pendingEdits=S.pendingEdits.map(x=>x.id===id?{...x,status:'approved'}:x);
+  sv();renderApprovals();renderAll();showToast("Approved & applied ✓");
+}
+function rejectEdit(id){
+  S.pendingEdits=S.pendingEdits.map(x=>x.id===id?{...x,status:'rejected'}:x);
+  sv();renderApprovals();showToast("Rejected","error");
+}
+
 function renderPrices(){
   const el=document.getElementById('price-list');if(!el)return;
   el.innerHTML=ITEMS.map(i=>`<div class="c2" style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;">${i.name}</span><span style="color:var(--or);font-size:13px;font-weight:700;">${fmt(S.prices[i.id]||i.price)}</span></div>`).join('');
@@ -914,8 +1085,7 @@ function showAddCust(){
     <div id="fe" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin-bottom:10px;"></div>
     <div class="fw"><label class="fl">Customer Name *</label><input class="fi" id="fn" placeholder="Full name"/></div>
     <div class="fw"><label class="fl">Mobile *</label><input class="fi" id="fm" placeholder="0300-0000000" type="tel"/></div>
-    <div class="fw"><label class="fl">CNIC</label><input class="fi" id="fcn" placeholder="35202-XXXXXXX-X"/></div>
-    <div class="fw"><label class="fl">IMEI Number</label><input class="fi" id="fimei" placeholder="Device IMEI" maxlength="20"/></div>
+    <div class="fw"><label class="fl">Device SN</label><input class="fi" id="fimei" placeholder="Device Serial Number" maxlength="30"/></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fw"><label class="fl">House # *</label><input class="fi" id="fh" placeholder="12"/></div>
       <div class="fw"><label class="fl">Street #</label><input class="fi" id="fs" placeholder="5"/></div>
@@ -937,7 +1107,8 @@ function saveCust(){
   const house=document.getElementById('fh').value.trim(),block=document.getElementById('fb').value.trim();
   const fe=document.getElementById('fe');
   if(!name||!mobile||!house||!block){fe.textContent="Name, Mobile, House, Block required!";fe.style.display="block";return;}
-  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,cnic:document.getElementById('fcn').value.trim(),imei:document.getElementById('fimei').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),status:"active"});
+  const _u=S.users.find(u=>u.id===S.uid)||{};
+  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,imei:document.getElementById('fimei').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),status:"active",createdBy:S.uid,createdByName:_u.name||''});
   sv();closeM();renderCusts();renderDash();buildProjPills();showToast("Customer added! ✓");
 }
 function showEditCust(id){
@@ -946,8 +1117,7 @@ function showEditCust(id){
   document.getElementById('mbody').innerHTML=`
     <div class="fw"><label class="fl">Name</label><input class="fi" id="en" value="${c.name}"/></div>
     <div class="fw"><label class="fl">Mobile</label><input class="fi" id="em" value="${c.mobile}"/></div>
-    <div class="fw"><label class="fl">CNIC</label><input class="fi" id="ec" value="${c.cnic||''}"/></div>
-    <div class="fw"><label class="fl">IMEI Number</label><input class="fi" id="eimei" value="${c.imei||''}" placeholder="Device IMEI" maxlength="20"/></div>
+    <div class="fw"><label class="fl">Device SN</label><input class="fi" id="eimei" value="${c.imei||''}" placeholder="Device Serial Number" maxlength="30"/></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fw"><label class="fl">House #</label><input class="fi" id="eh" value="${c.house}"/></div>
       <div class="fw"><label class="fl">Street #</label><input class="fi" id="es" value="${c.street||''}"/></div>
@@ -964,7 +1134,13 @@ function showEditCust(id){
   `;
 }
 function updCust(id){
-  S.custs=S.custs.map(c=>c.id===id?{...c,name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,cnic:document.getElementById('ec').value.trim(),imei:document.getElementById('eimei').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim()}:c);
+  const c=S.custs.find(x=>x.id===id);if(!c)return;
+  const data={name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,imei:document.getElementById('eimei').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim()};
+  if(S.role==='admin'){
+    requestEdit('customer',id,data,`H# ${c.house}, Block ${c.block} — ${c.name}`);
+    closeM();return;
+  }
+  S.custs=S.custs.map(x=>x.id===id?{...x,...data}:x);
   sv();closeM();renderCusts();renderDash();showToast("Updated! ✓");
 }
 function showAddUser(){
@@ -1027,7 +1203,7 @@ function savePass(id){
 
 // ===== PTA IMEI MODULE =====
 function imeiPillsHTML(){
-  const filters=[['all','All'],['pending','Pending'],['approved','Approved'],['rejected','Rejected']];
+  const filters=[['all','All'],['pending','Pending'],['recommended','Recommended'],['approved','Approved'],['rejected','Rejected']];
   return filters.map(([f,l])=>`<button class="pill${S.imeiFilter===f?' act':''}" onclick="setImeiFilter('${f}',this)">${l}</button>`).join('');
 }
 function setImeiFilter(f,btn){
@@ -1053,8 +1229,10 @@ function renderPtaControls(){
         <div id="pi-ferr" style="display:none;color:var(--red);font-size:12px;background:rgba(239,68,68,.1);padding:8px;border-radius:8px;margin:10px 0;"></div>
         <button class="btn bg bfl" style="margin-top:10px;" onclick="uploadImeiExcel()">📤 Upload & Submit</button>
       </div>`;
-  } else if(S.role==='admin'||S.role==='superadmin'){
-    el.innerHTML=`<div class="c2" style="color:var(--mut);font-size:12px;">Review and approve/reject IMEI submissions from PTA users below.</div>`;
+  } else if(S.role==='admin'){
+    el.innerHTML=`<div class="c2" style="color:var(--mut);font-size:12px;">Pending IMEI submissions ko review karein — Recommend ya Reject karein. Final approval Super Admin se hogi.</div>`;
+  } else if(S.role==='superadmin'){
+    el.innerHTML=`<div class="c2" style="color:var(--mut);font-size:12px;">Admin se recommended IMEIs ko final approve/reject karein.</div>`;
   } else {
     el.innerHTML='';
   }
@@ -1114,8 +1292,24 @@ function uploadImeiExcel(){
   reader.readAsArrayBuffer(f);
 }
 function imeiAction(id,action){
-  S.imeis=S.imeis.map(x=>x.id===id?{...x,status:action,reviewedBy:(S.users.find(u=>u.id===S.uid)||{}).name||'',reviewDate:todayStr()}:x);
-  sv();renderImeis();showToast(action==='approved'?"IMEI approved! ✓":"IMEI rejected","error");
+  const x=S.imeis.find(y=>y.id===id);if(!x)return;
+  const reviewerName=(S.users.find(u=>u.id===S.uid)||{}).name||'';
+  if(S.role==='admin'){
+    // Admin can only recommend or reject pending items; final approval goes to superadmin
+    if(x.status!=='pending'){showToast("Sirf pending IMEI par action ho sakta hai","error");return;}
+    if(action==='approved'){
+      S.imeis=S.imeis.map(y=>y.id===id?{...y,status:'recommended',recommendedBy:reviewerName,recommendDate:todayStr()}:y);
+      showToast("IMEI recommend kar diya — Super Admin approval ka intezar","success");
+    } else {
+      S.imeis=S.imeis.map(y=>y.id===id?{...y,status:'rejected',reviewedBy:reviewerName,reviewDate:todayStr()}:y);
+      showToast("IMEI rejected","error");
+    }
+  } else if(S.role==='superadmin'){
+    if(action==='approved'&&x.status!=='recommended'&&x.status!=='pending'){showToast("Sirf pending/recommended IMEI approve ho sakta hai","error");return;}
+    S.imeis=S.imeis.map(y=>y.id===id?{...y,status:action,reviewedBy:reviewerName,reviewDate:todayStr()}:y);
+    showToast(action==='approved'?"IMEI approved! ✓":"IMEI rejected","error");
+  }
+  sv();renderImeis();
 }
 function renderImeis(){
   const pillsEl=document.getElementById('pta-pills');
@@ -1123,18 +1317,19 @@ function renderImeis(){
   renderPtaControls();
   const q=(document.getElementById('pta-search')||{}).value||'';
   document.getElementById('pta-total').textContent=S.imeis.length;
-  document.getElementById('pta-pending').textContent=S.imeis.filter(x=>x.status==='pending').length;
+  document.getElementById('pta-pending').textContent=S.role==='superadmin'?S.imeis.filter(x=>x.status==='pending'||x.status==='recommended').length:S.imeis.filter(x=>x.status==='pending').length;
   let list=S.imeis;
   if(S.role==='pta')list=list.filter(x=>x.addedBy===S.uid);
   list=list.filter(x=>{
     const mq=!q||x.imei.includes(q);
     return mq&&(S.imeiFilter==='all'||x.status===S.imeiFilter);
   });
-  const canReview=S.role==='admin'||S.role==='superadmin';
   document.getElementById('imei-list').innerHTML=list.length===0?`<div style="color:var(--mut);text-align:center;padding:32px 0;">No IMEI records</div>`:
     list.map(x=>{
-      const stColor=x.status==='approved'?'var(--grn)':x.status==='rejected'?'var(--red)':'var(--ylw)';
-      const stBg=x.status==='approved'?'rgba(34,197,94,.2)':x.status==='rejected'?'rgba(239,68,68,.2)':'rgba(245,158,11,.2)';
+      const stColor=x.status==='approved'?'var(--grn)':x.status==='rejected'?'var(--red)':x.status==='recommended'?'var(--blu)':'var(--ylw)';
+      const stBg=x.status==='approved'?'rgba(34,197,94,.2)':x.status==='rejected'?'rgba(239,68,68,.2)':x.status==='recommended'?'rgba(37,99,235,.2)':'rgba(245,158,11,.2)';
+      const adminCanAct=S.role==='admin'&&x.status==='pending';
+      const superCanAct=S.role==='superadmin'&&(x.status==='pending'||x.status==='recommended');
       return `<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <div><div style="font-size:14px;font-weight:800;font-family:monospace;">${x.imei}</div>
@@ -1142,11 +1337,16 @@ function renderImeis(){
           <div style="color:var(--mut);font-size:11px;margin-top:3px;">By ${x.addedByName||'—'} · ${x.date}</div></div>
           <span class="bdg" style="background:${stBg};color:${stColor};">${x.status}</span>
         </div>
-        ${canReview&&x.status==='pending'?`<div style="display:flex;gap:8px;margin-top:10px;">
+        ${adminCanAct?`<div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn bsm bg bfl" onclick="imeiAction('${x.id}','approved')">✓ Recommend</button>
+          <button class="btn bsm br bfl" onclick="imeiAction('${x.id}','rejected')">✕ Reject</button>
+        </div>`:''}
+        ${superCanAct?`<div style="display:flex;gap:8px;margin-top:10px;">
           <button class="btn bsm bg bfl" onclick="imeiAction('${x.id}','approved')">✓ Approve</button>
           <button class="btn bsm br bfl" onclick="imeiAction('${x.id}','rejected')">✕ Reject</button>
         </div>`:''}
-        ${x.reviewedBy?`<div style="color:var(--mut);font-size:10px;margin-top:6px;">Reviewed by ${x.reviewedBy} · ${x.reviewDate}</div>`:''}
+        ${x.recommendedBy?`<div style="color:var(--mut);font-size:10px;margin-top:6px;">Recommended by ${x.recommendedBy} · ${x.recommendDate}</div>`:''}
+        ${x.reviewedBy?`<div style="color:var(--mut);font-size:10px;margin-top:2px;">Reviewed by ${x.reviewedBy} · ${x.reviewDate}</div>`:''}
       </div>`;
     }).join('');
 }
@@ -1156,7 +1356,7 @@ function showToast(msg,type="success"){
   t.style.background=type==="success"?"#22C55E":type==="error"?"#EF4444":type==="warn"?"#D97706":"#F59E0B";
   t.style.color="#fff";setTimeout(()=>t.style.display="none",2800);
 }
-function renderAll(){if(S.role==='pta'){renderImeis();return;}renderDash();renderCusts();renderInvoices();renderReports();if(S.role==='superadmin')renderUsers();}
+function renderAll(){if(S.role==='pta'){renderImeis();return;}renderDash();renderCusts();renderInvoices();if(S.role!=='user')renderReports();if(S.role==='superadmin'){renderUsers();renderApprovals();}}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
