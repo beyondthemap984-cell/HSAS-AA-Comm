@@ -363,18 +363,20 @@ function loadS(){return{
   projFilter:'all', invFilter:'all', imeiFilter:'all', pendFilter:'pending',
 };}
 let S=loadS();
-if(!S.users.find(u=>u.role==='pta')){
-  S.users.push({id:"U4",username:"pta",password:"Pta@1234",name:"PTA Operator",role:"pta",status:"active"});
-  sv();
-}
-function sv(){
-  localStorage.setItem('alm_custs',JSON.stringify(S.custs));
-  localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
-  localStorage.setItem('alm_prices',JSON.stringify(S.prices));
-  localStorage.setItem('alm_users',JSON.stringify(S.users));
-  localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
-  localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
-}
+
+db.collection('crm').doc('data').get().then(doc=>{
+  if(doc.exists){
+    const d=doc.data();
+    S.custs=d.custs||S.custs;
+    S.invoices=d.invoices||S.invoices;
+    S.prices=d.prices||S.prices;
+    S.users=d.users||S.users;
+    S.imeis=d.imeis||S.imeis;
+    S.pendingEdits=d.pendingEdits||S.pendingEdits;
+    sv();
+    if(typeof renderDash==='function')renderDash();
+  }
+}).catch(e=>console.error('Firestore load error:',e));
 
 if(S.custs.length===0){
   S.custs=[
