@@ -68,27 +68,6 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
 #ls{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 22px;}
 #ls.active{display:flex;}
 </style>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAdMzPmLyUvvla44bxGYHcBrcFveY_-CbA",
-      authDomain: "aa-communication-crm.firebaseapp.com",
-      projectId: "aa-communication-crm",
-      storageBucket: "aa-communication-crm.firebasestorage.app",
-      messagingSenderId: "773265003719",
-      appId: "1:773265003719:web:075637d31776bd3d39dae2",
-      measurementId: "G-PG29E53824"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    // Sign in anonymously so Firestore security rules can require auth
-    auth.signInAnonymously().catch(e=>console.error('Firebase auth error:',e));
-  </script>
 </head>
 <body>
 
@@ -358,14 +337,17 @@ function loadS(){return{
     {id:"U1",username:"superadmin",password:"super123",name:"Super Administrator",role:"superadmin",status:"active"},
     {id:"U2",username:"admin",password:"admin123",name:"Administrator",role:"admin",status:"active"},
     {id:"U3",username:"user1",password:"user123",name:"Field Technician",role:"user",status:"active"},
-    {id:"U4",username:"pta",password:"Pta@1234",name:"PTA Operator",role:"pta",status:"active"},
+    {id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"},
   ],
   imeis:JSON.parse(localStorage.getItem('alm_imeis')||'[]'),
   pendingEdits:JSON.parse(localStorage.getItem('alm_pending')||'[]'),
   projFilter:'all', invFilter:'all', imeiFilter:'all', pendFilter:'pending',
 };}
 let S=loadS();
-
+if(!S.users.find(u=>u.role==='pta')){
+  S.users.push({id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"});
+  sv();
+}
 function sv(){
   localStorage.setItem('alm_custs',JSON.stringify(S.custs));
   localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
@@ -373,31 +355,7 @@ function sv(){
   localStorage.setItem('alm_users',JSON.stringify(S.users));
   localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
   localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
-  if(auth.currentUser){
-    db.collection('crm').doc('data').set({
-      custs:S.custs, invoices:S.invoices, prices:S.prices,
-      users:S.users, imeis:S.imeis, pendingEdits:S.pendingEdits
-    }).catch(e=>console.error('Firestore save error:',e));
-  }
 }
-
-auth.onAuthStateChanged(user=>{
-  if(!user)return;
-  db.collection('crm').doc('data').get().then(doc=>{
-    if(doc.exists){
-      const d=doc.data();
-      S.custs=d.custs||S.custs;
-      S.invoices=d.invoices||S.invoices;
-      S.prices=d.prices||S.prices;
-      S.users=d.users||S.users;
-      S.imeis=d.imeis||S.imeis;
-      S.pendingEdits=d.pendingEdits||S.pendingEdits;
-      sv();
-      if(typeof renderDash==='function')renderDash();
-      if(typeof renderCusts==='function')renderCusts();
-    }
-  }).catch(e=>console.error('Firestore load error:',e));
-});
 
 if(S.custs.length===0){
   S.custs=[
@@ -415,7 +373,8 @@ if(S.custs.length===0){
   sv();
 }
 
-const DEFAULT_USERNAMES={superadmin:"superadmin",admin:"admin",user:"user1",pta:"pta"};
+const HINTS={superadmin:"Hint: super123",admin:"Hint: admin123",user:"Hint: user123",pta:"Hint: pta123"};
+const DEFAULT_USERNAMES={superadmin:"superadmin",admin:"admin",user:"user1",pta:"pta1"};
 let selRoleVal="superadmin";
 function selRole(btn){
   selRoleVal=btn.dataset.role;
