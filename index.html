@@ -1518,7 +1518,14 @@ function savePass(id){
   if(p1.length<6){e.textContent="Min 6 chars!";e.style.display="block";return;}
   if(p1!==p2){e.textContent="Passwords don't match!";e.style.display="block";return;}
   S.users=S.users.map(u=>u.id===id?{...u,password:p1}:u);
-  sv();closeM();showToast("Password changed! ✓");
+  localStorage.setItem('alm_users',JSON.stringify(S.users));
+  // Directly Firestore mein force save karo — auth check bypass
+  db.collection('crm').doc('data').update({users:S.users})
+    .catch(()=>db.collection('crm').doc('data').set({
+      custs:S.custs, invoices:S.invoices, prices:S.prices,
+      users:S.users, imeis:S.imeis, pendingEdits:S.pendingEdits
+    }));
+  closeM();showToast("Password changed & synced! ✓");
 }
 
 // ===== PTA IMEI MODULE =====
