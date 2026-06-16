@@ -68,6 +68,27 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
 #ls{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 22px;}
 #ls.active{display:flex;}
 </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAdMzPmLyUvvla44bxGYHcBrcFveY_-CbA",
+      authDomain: "aa-communication-crm.firebaseapp.com",
+      projectId: "aa-communication-crm",
+      storageBucket: "aa-communication-crm.firebasestorage.app",
+      messagingSenderId: "773265003719",
+      appId: "1:773265003719:web:075637d31776bd3d39dae2",
+      measurementId: "G-PG29E53824"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    // Sign in anonymously so Firestore security rules can require auth
+    auth.signInAnonymously().catch(e=>console.error('Firebase auth error:',e));
+  </script>
 </head>
 <body>
 
@@ -328,6 +349,44 @@ const todayStr=()=>new Date().toISOString().slice(0,10);
 const curMonth=()=>new Date().toISOString().slice(0,7);
 const genId=()=>"ALM-"+String(Date.now()).slice(-6);
 
+// ===== PAYMENT PROOF SYSTEM (localStorage only - 7 din auto delete) =====
+function saveProof(invId,base64Data){
+  if(!base64Data)return;
+  try{
+    const expiry=Date.now()+(7*24*60*60*1000); // 7 din baad expire
+    localStorage.setItem('proof_'+invId,base64Data);
+    localStorage.setItem('proof_exp_'+invId,expiry.toString());
+  }catch(e){showToast('Screenshot save nahi hui — storage full ho sakti hai','error');}
+}
+function getProof(invId){
+  try{
+    const exp=localStorage.getItem('proof_exp_'+invId);
+    if(!exp||Date.now()>parseInt(exp)){deleteProof(invId);return null;}
+    return localStorage.getItem('proof_'+invId);
+  }catch(e){return null;}
+}
+function deleteProof(invId){
+  try{localStorage.removeItem('proof_'+invId);localStorage.removeItem('proof_exp_'+invId);}catch(e){}
+}
+function getProofExpiry(invId){
+  try{
+    const exp=localStorage.getItem('proof_exp_'+invId);
+    if(!exp)return null;
+    const ms=parseInt(exp)-Date.now();
+    if(ms<=0)return null;
+    return Math.ceil(ms/(24*60*60*1000)); // days remaining
+  }catch(e){return null;}
+}
+function cleanExpiredProofs(){
+  try{
+    Object.keys(localStorage).filter(k=>k.startsWith('proof_exp_')).forEach(k=>{
+      const invId=k.replace('proof_exp_','');
+      if(Date.now()>parseInt(localStorage.getItem(k)||'0'))deleteProof(invId);
+    });
+  }catch(e){}
+}
+cleanExpiredProofs(); // App open hote hi purane proofs clean karo
+
 function loadS(){return{
   role:null,uid:null,
   custs:JSON.parse(localStorage.getItem('alm_custs')||'[]'),
@@ -337,17 +396,14 @@ function loadS(){return{
     {id:"U1",username:"superadmin",password:"super123",name:"Super Administrator",role:"superadmin",status:"active"},
     {id:"U2",username:"admin",password:"admin123",name:"Administrator",role:"admin",status:"active"},
     {id:"U3",username:"user1",password:"user123",name:"Field Technician",role:"user",status:"active"},
-    {id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"},
+    {id:"U4",username:"pta",password:"Pta@1234",name:"PTA Operator",role:"pta",status:"active"},
   ],
   imeis:JSON.parse(localStorage.getItem('alm_imeis')||'[]'),
   pendingEdits:JSON.parse(localStorage.getItem('alm_pending')||'[]'),
   projFilter:'all', invFilter:'all', imeiFilter:'all', pendFilter:'pending',
 };}
 let S=loadS();
-if(!S.users.find(u=>u.role==='pta')){
-  S.users.push({id:"U4",username:"pta1",password:"pta123",name:"PTA Operator",role:"pta",status:"active"});
-  sv();
-}
+
 function sv(){
   localStorage.setItem('alm_custs',JSON.stringify(S.custs));
   localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
@@ -355,7 +411,32 @@ function sv(){
   localStorage.setItem('alm_users',JSON.stringify(S.users));
   localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
   localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
+  if(auth.currentUser){
+    db.collection('crm').doc('data').set({
+      custs:S.custs, invoices:S.invoices, prices:S.prices,
+      users:S.users, imeis:S.imeis, pendingEdits:S.pendingEdits
+    }).catch(e=>console.error('Firestore save error:',e));
+  }
 }
+
+auth.onAuthStateChanged(user=>{
+  if(!user)return;
+  db.collection('crm').doc('data').get().then(doc=>{
+    if(doc.exists){
+      const d=doc.data();
+      S.custs=d.custs||S.custs;
+      S.invoices=d.invoices||S.invoices;
+      S.prices=d.prices||S.prices;
+      // Users hamesha Firestore se lo — password changes sync hon
+      if(d.users&&d.users.length>0){S.users=d.users;}else{S.users=S.users;}
+      S.imeis=d.imeis||S.imeis;
+      S.pendingEdits=d.pendingEdits||S.pendingEdits;
+      sv();
+      if(typeof renderDash==='function')renderDash();
+      if(typeof renderCusts==='function')renderCusts();
+    }
+  }).catch(e=>console.error('Firestore load error:',e));
+});
 
 if(S.custs.length===0){
   S.custs=[
@@ -373,8 +454,7 @@ if(S.custs.length===0){
   sv();
 }
 
-const HINTS={superadmin:"Hint: super123",admin:"Hint: admin123",user:"Hint: user123",pta:"Hint: pta123"};
-const DEFAULT_USERNAMES={superadmin:"superadmin",admin:"admin",user:"user1",pta:"pta1"};
+const DEFAULT_USERNAMES={superadmin:"superadmin",admin:"admin",user:"user1",pta:"pta"};
 let selRoleVal="superadmin";
 function selRole(btn){
   selRoleVal=btn.dataset.role;
@@ -658,6 +738,11 @@ function openInvDetail(id){
   const inv=S.invoices.find(i=>i.id===id);
   const c=S.custs.find(x=>x.id===inv?.custId);
   if(!inv||!c)return;
+  // Screenshot localStorage se load karo (Firestore mein store nahi hoti — 7 din baad auto delete)
+  const localProof=getProof(id);
+  const proofDays=getProofExpiry(id);
+  if(localProof)inv._localProof=localProof;
+  if(proofDays)inv._proofDays=proofDays;
   document.getElementById('mtitle').textContent="Invoice";
   document.getElementById('mbody').innerHTML=`
     <div style="border-radius:14px;overflow:hidden;border:1px solid var(--bdr);margin-bottom:14px;">
@@ -691,6 +776,14 @@ function openInvDetail(id){
         </div>
         <div style="text-align:center;padding:8px;border-radius:9px;margin-top:10px;background:${inv.status==='paid'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${inv.status==='paid'?'var(--grn)':'var(--red)'};font-size:12px;font-weight:800;letter-spacing:2px;" id="inv-sbdg">${inv.status==='paid'?'✓ PAID':'⚠ UNPAID'}</div>
         ${inv.createdByName?`<div style="text-align:center;color:var(--mut);font-size:10px;margin-top:8px;">Generated by: ${inv.createdByName} (${inv.createdByRole||''})</div>`:''}
+        ${(inv._localProof)?`<div style="margin-top:10px;border:1.5px solid var(--bdr);border-radius:12px;overflow:hidden;">
+          <div style="background:var(--card2);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:1px;">💳 Payment Proof</span>
+            <span style="color:var(--ylw);font-size:10px;font-weight:700;">🕐 ${inv._proofDays} din baad delete</span>
+          </div>
+          <img src="${inv._localProof}" style="max-width:100%;display:block;"/>
+          <div style="background:rgba(239,68,68,.08);padding:6px 12px;color:var(--mut);font-size:9px;">⚠ Sirf is device par dikh rahi hai · 7 din baad auto-delete</div>
+        </div>`:''}
         <div style="text-align:center;color:var(--mut);font-size:9px;margin-top:4px;opacity:.6;">Powered by Tech & Solutions</div>
       </div>
     </div>
@@ -928,8 +1021,21 @@ function loadProofPreview(){
   if(!f)return;
   const reader=new FileReader();
   reader.onload=e=>{
-    payProofData=e.target.result;
-    document.getElementById('proof-preview').innerHTML=`<img src="${payProofData}" style="max-width:100%;border-radius:8px;border:1.5px solid var(--bdr);max-height:160px;"/>`;
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const MAX=800;
+      let w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      payProofData=canvas.toDataURL('image/jpeg',0.4);
+      const kb=Math.round(payProofData.length*0.75/1024);
+      document.getElementById('proof-preview').innerHTML=`
+        <img src="${payProofData}" style="max-width:100%;border-radius:8px;border:1.5px solid var(--bdr);max-height:160px;"/>
+        <div style="color:var(--grn);font-size:10px;margin-top:4px;font-weight:700;">✓ Compressed: ${kb}KB — 7 din baad auto delete</div>`;
+    };
+    img.src=e.target.result;
   };
   reader.readAsDataURL(f);
 }
@@ -980,7 +1086,9 @@ function saveInvoice(){
   const total=sel.reduce((s,i)=>s+i.qty*i.price,0);
   const typ=document.getElementById('ityp').value;
   const user=S.users.find(u=>u.id===S.uid)||{};
-  const inv={id:genId(),custId,date:todayStr(),items:sel,status:pay==='pending'?'unpaid':'paid',total,type:typ,payMethod:pay,payProof:payProofData||null,createdBy:S.uid,createdByName:user.name||'',createdByRole:S.role};
+  const inv={id:genId(),custId,date:todayStr(),items:sel,status:pay==='pending'?'unpaid':'paid',total,type:typ,payMethod:pay,payProof:null,createdBy:S.uid,createdByName:user.name||'',createdByRole:S.role};
+  // Screenshot sirf localStorage mein save hoti hai — 7 din baad auto delete
+  if(payProofData)saveProof(inv.id,payProofData);
   S.invoices.unshift(inv);sv();closeM();renderAll();showToast("Invoice created! ✓");
   payProofData=null;
   setTimeout(()=>openInvDetail(inv.id),300);
