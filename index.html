@@ -115,7 +115,7 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
     <input class="fi" id="lcap" placeholder="Upar likha code yahan darj karein" autocomplete="off"/>
   </div>
   <div style="color:var(--red);font-size:12px;margin-bottom:10px;min-height:16px;" id="lerr"></div>
-  <button class="btn bor bfl" onclick="doLogin()">Sign In &#x2192;</button>
+  <button class="btn bor bfl" id="login-btn" onclick="doLogin()" disabled style="opacity:0.6;">⏳ Loading...</button>
 </div>
 
 <!-- HEADER -->
@@ -434,15 +434,26 @@ auth.onAuthStateChanged(user=>{
       S.custs=d.custs||S.custs;
       S.invoices=d.invoices||S.invoices;
       S.prices=d.prices||S.prices;
-      // Users hamesha Firestore se lo — password changes sync hon
-      if(d.users&&d.users.length>0){S.users=d.users;}else{S.users=S.users;}
+      // Users HAMESHA Firestore se lo — localStorage ignore karo
+      if(d.users&&d.users.length>0){
+        S.users=d.users;
+        localStorage.setItem('alm_users',JSON.stringify(S.users));
+      }
       S.imeis=d.imeis||S.imeis;
       S.pendingEdits=d.pendingEdits||S.pendingEdits;
       sv();
       if(typeof renderDash==='function')renderDash();
       if(typeof renderCusts==='function')renderCusts();
     }
-  }).catch(e=>console.error('Firestore load error:',e));
+    // Firestore load ho gaya — ab login enable karo
+    const btn=document.getElementById('login-btn');
+    if(btn){btn.disabled=false;btn.textContent='Sign In →';}
+  }).catch(e=>{
+    console.error('Firestore load error:',e);
+    // Error pe bhi login enable karo warna stuck ho jayega
+    const btn=document.getElementById('login-btn');
+    if(btn){btn.disabled=false;btn.textContent='Sign In →';}
+  });
 });
 
 if(S.custs.length===0){
