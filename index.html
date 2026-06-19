@@ -1275,7 +1275,7 @@ function renderUsers(){
     </div>
   </div>`).join('');
 }
-function togUsr(id){S.users=S.users.map(u=>u.id===id?{...u,status:u.status==='active'?'inactive':'active'}:u);sv();syncToServer();renderUsers();showToast("Updated!");
+function togUsr(id){S.users=S.users.map(u=>u.id===id?{...u,status:u.status==='active'?'inactive':'active'}:u);sv();syncToServer();renderUsers();showToast("Updated!");}
 
 function renderActivity(){
   if(S.role!=='superadmin'&&S.role!=='admin')return;
@@ -1321,7 +1321,7 @@ function renderActivity(){
     }).join('');
 }
 
-function delUsr(id){S.users=S.users.filter(u=>u.id!==id);sv();syncToServer();renderUsers();showToast("Deleted","error");
+function delUsr(id){S.users=S.users.filter(u=>u.id!==id);sv();syncToServer();renderUsers();showToast("Deleted","error");}
 
 // ===== APPROVALS (Admin requests -> Super Admin approval) =====
 function setPendFilter(f,btn){
