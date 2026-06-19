@@ -1252,7 +1252,7 @@ function renderUsers(){
     </div>
   </div>`).join('');
 }
-function togUsr(id){S.users=S.users.map(u=>u.id===id?{...u,status:u.status==='active'?'inactive':'active'}:u);sv();renderUsers();showToast("Updated!");}
+function togUsr(id){S.users=S.users.map(u=>u.id===id?{...u,status:u.status==='active'?'inactive':'active'}:u);sv();syncToServer();renderUsers();showToast("Updated!");
 
 function renderActivity(){
   if(S.role!=='superadmin'&&S.role!=='admin')return;
@@ -1298,7 +1298,7 @@ function renderActivity(){
     }).join('');
 }
 
-function delUsr(id){S.users=S.users.filter(u=>u.id!==id);sv();renderUsers();showToast("Deleted","error");}
+function delUsr(id){S.users=S.users.filter(u=>u.id!==id);sv();syncToServer();renderUsers();showToast("Deleted","error");
 
 // ===== APPROVALS (Admin requests -> Super Admin approval) =====
 function setPendFilter(f,btn){
@@ -1488,7 +1488,7 @@ function saveUser(){
   if(p.length<6){e.textContent="Min 6 characters!";e.style.display="block";return;}
   if(S.users.find(x=>x.username===u)){e.textContent="Username exists!";e.style.display="block";return;}
   S.users.push({id:"U"+String(Date.now()).slice(-5),username:u,password:p,name:n,role:document.getElementById('ur').value,status:"active"});
-  sv();closeM();renderUsers();showToast("User added! ✓");
+sv();syncToServer();closeM();renderUsers();showToast("User added! ✓");
 }
 function showEditUser(id){
   const u=S.users.find(x=>x.id===id);if(!u)return;
@@ -1506,7 +1506,7 @@ function showEditUser(id){
 }
 function updUsr(id){
   S.users=S.users.map(u=>u.id===id?{...u,name:document.getElementById('eun').value.trim()||u.name,username:document.getElementById('euu').value.trim()||u.username,role:document.getElementById('eur').value}:u);
-  sv();closeM();renderUsers();showToast("Updated! ✓");
+  sv();syncToServer();closeM();renderUsers();showToast("Updated! ✓");
 }
 function showChgPass(id){
   const u=S.users.find(x=>x.id===id);if(!u)return;
