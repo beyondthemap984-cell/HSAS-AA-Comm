@@ -68,27 +68,6 @@ input,select,textarea,button{font-family:'Barlow',sans-serif;}
 #ls{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 22px;}
 #ls.active{display:flex;}
 </style>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAdMzPmLyUvvla44bxGYHcBrcFveY_-CbA",
-      authDomain: "aa-communication-crm.firebaseapp.com",
-      projectId: "aa-communication-crm",
-      storageBucket: "aa-communication-crm.firebasestorage.app",
-      messagingSenderId: "773265003719",
-      appId: "1:773265003719:web:075637d31776bd3d39dae2",
-      measurementId: "G-PG29E53824"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    // Sign in anonymously so Firestore security rules can require auth
-    auth.signInAnonymously().catch(e=>console.error('Firebase auth error:',e));
-  </script>
 </head>
 <body>
 
@@ -411,6 +390,9 @@ function loadS(){return{
 };}
 let S=loadS();
 
+// ===== SERVER SYNC (MongoDB via Vercel API routes) =====
+// Sirf localStorage ki jagah ab server (MongoDB) sab browsers/devices ke beech data sync karta hai.
+let _syncTimer=null;
 function sv(){
   localStorage.setItem('alm_custs',JSON.stringify(S.custs));
   localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
@@ -418,43 +400,53 @@ function sv(){
   localStorage.setItem('alm_users',JSON.stringify(S.users));
   localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
   localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
-  if(auth.currentUser){
-    db.collection('crm').doc('data').set({
+  // Debounce: rapid changes ko ek hi request mein batch karta hai
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(syncToServer,400);
+}
+function syncToServer(){
+  fetch('/api/data',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
       custs:S.custs, invoices:S.invoices, prices:S.prices,
       users:S.users, imeis:S.imeis, pendingEdits:S.pendingEdits
-    }).catch(e=>console.error('Firestore save error:',e));
-  }
+    })
+  }).catch(e=>console.error('Server save error:',e));
 }
-
-auth.onAuthStateChanged(user=>{
-  if(!user)return;
-  db.collection('crm').doc('data').get().then(doc=>{
-    if(doc.exists){
-      const d=doc.data();
+function loadFromServer(){
+  fetch('/api/data').then(r=>r.json()).then(d=>{
+    if(d&&Object.keys(d).length>0&&(d.custs||d.users||d.invoices)){
       S.custs=d.custs||S.custs;
       S.invoices=d.invoices||S.invoices;
       S.prices=d.prices||S.prices;
-      // Users HAMESHA Firestore se lo — localStorage ignore karo
+      // Users hamesha server se lo — localStorage ignore karo
       if(d.users&&d.users.length>0){
         S.users=d.users;
-        localStorage.setItem('alm_users',JSON.stringify(S.users));
       }
       S.imeis=d.imeis||S.imeis;
       S.pendingEdits=d.pendingEdits||S.pendingEdits;
-      sv();
+      localStorage.setItem('alm_custs',JSON.stringify(S.custs));
+      localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
+      localStorage.setItem('alm_prices',JSON.stringify(S.prices));
+      localStorage.setItem('alm_users',JSON.stringify(S.users));
+      localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
+      localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
       if(typeof renderDash==='function')renderDash();
       if(typeof renderCusts==='function')renderCusts();
+      if(typeof renderUsers==='function')renderUsers();
+    } else {
+      // Server par abhi kuch save nahi — local (default seed) data ko server par push kar dein
+      syncToServer();
     }
-    // Firestore load ho gaya — ab login enable karo
-    const btn=document.getElementById('login-btn');
-    if(btn){btn.disabled=false;btn.textContent='Sign In →';}
   }).catch(e=>{
-    console.error('Firestore load error:',e);
-    // Error pe bhi login enable karo warna stuck ho jayega
+    console.error('Server load error:',e);
+  }).finally(()=>{
     const btn=document.getElementById('login-btn');
     if(btn){btn.disabled=false;btn.textContent='Sign In →';}
   });
-});
+}
+loadFromServer();
 
 if(S.custs.length===0){
   S.custs=[
@@ -804,7 +796,7 @@ function openInvDetail(id){
   const inv=S.invoices.find(i=>i.id===id);
   const c=S.custs.find(x=>x.id===inv?.custId);
   if(!inv||!c)return;
-  // Screenshot localStorage se load karo (Firestore mein store nahi hoti — 7 din baad auto delete)
+  // Screenshot localStorage se load karo (server par store nahi hoti — 7 din baad auto delete)
   const localProof=getProof(id);
   const proofDays=getProofExpiry(id);
   if(localProof)inv._localProof=localProof;
@@ -1529,13 +1521,8 @@ function savePass(id){
   if(p1.length<6){e.textContent="Min 6 chars!";e.style.display="block";return;}
   if(p1!==p2){e.textContent="Passwords don't match!";e.style.display="block";return;}
   S.users=S.users.map(u=>u.id===id?{...u,password:p1}:u);
-  localStorage.setItem('alm_users',JSON.stringify(S.users));
-  // Directly Firestore mein force save karo — auth check bypass
-  db.collection('crm').doc('data').update({users:S.users})
-    .catch(()=>db.collection('crm').doc('data').set({
-      custs:S.custs, invoices:S.invoices, prices:S.prices,
-      users:S.users, imeis:S.imeis, pendingEdits:S.pendingEdits
-    }));
+  sv(); // localStorage + debounced server sync
+  syncToServer(); // password jaisi critical change ko fauran (immediately) sync karo
   closeM();showToast("Password changed & synced! ✓");
 }
 
