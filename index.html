@@ -408,16 +408,38 @@ function sv(){
   clearTimeout(_syncTimer);
   _syncTimer=setTimeout(syncToServer,400);
 }
+function mergeById(local,remote){
+  const map={};
+  (remote||[]).forEach(item=>{if(item&&item.id)map[item.id]=item;});
+  (local||[]).forEach(item=>{if(item&&item.id)map[item.id]=item;}); // local (jo abhi save ho raha hai) priority leta hai
+  return Object.values(map);
+}
 function syncToServer(){
-  fetch('/api/data',{
-    method:'POST',
-    keepalive:true,
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      custs:S.custs, invoices:S.invoices, prices:S.prices,
-      users:S.users, imeis:S.imeis, pendingEdits:S.pendingEdits
-    })
-  }).catch(e=>console.error('Server save error:',e));
+  fetch('/api/data').then(r=>r.json()).then(remote=>{
+    const merged={
+      custs:mergeById(S.custs,remote.custs),
+      invoices:mergeById(S.invoices,remote.invoices),
+      imeis:mergeById(S.imeis,remote.imeis),
+      pendingEdits:mergeById(S.pendingEdits,remote.pendingEdits),
+      users:mergeById(S.users,remote.users),
+      prices:Object.assign({},remote.prices||{},S.prices||{})
+    };
+    // Apna local state bhi turant update kar do taake screen pe sab dikhe
+    S.custs=merged.custs;S.invoices=merged.invoices;S.imeis=merged.imeis;
+    S.pendingEdits=merged.pendingEdits;S.users=merged.users;S.prices=merged.prices;
+    localStorage.setItem('alm_custs',JSON.stringify(S.custs));
+    localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
+    localStorage.setItem('alm_users',JSON.stringify(S.users));
+    localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
+    localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
+    localStorage.setItem('alm_prices',JSON.stringify(S.prices));
+    return fetch('/api/data',{
+      method:'POST',
+      keepalive:true,
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(merged)
+    });
+  }).catch(e=>console.error('Server sync error:',e));
 }
 function loadFromServer(){
   fetch('/api/data').then(r=>r.json()).then(d=>{
