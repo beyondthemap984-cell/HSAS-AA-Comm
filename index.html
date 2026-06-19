@@ -411,6 +411,7 @@ function sv(){
 function syncToServer(){
   fetch('/api/data',{
     method:'POST',
+    keepalive:true,
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       custs:S.custs, invoices:S.invoices, prices:S.prices,
