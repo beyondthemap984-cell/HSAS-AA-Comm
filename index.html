@@ -525,8 +525,8 @@ function listenToFirebase() {
 setTimeout(listenToFirebase, 800);
 
 // Default seed data agar local me kuch na ho
-if(S.custs.length===0){
-  S.custs=[
+if (S.custs.length === 0) {
+  S.custs = [
     {id:"A001",name:"Bilal Khan",mobile:"0321-9876543",house:"45",street:"2",block:"C",project:"Bahria EMC",installDate:"2024-05-20",notes:"4 door contacts, backyard",status:"active"},
     {id:"A002",name:"Sara Ali",mobile:"0333-4567890",house:"7",street:"1",block:"A",project:"Bahria Nasheman",installDate:"2024-01-10",notes:"",status:"inactive"},
     {id:"A003",name:"Usman Tariq",mobile:"0345-1122334",house:"33",street:"8",block:"D",project:"Bahria Mohlanwal",installDate:"2024-07-01",notes:"Kitchen smoke detectors",status:"active"},
@@ -534,7 +534,16 @@ if(S.custs.length===0){
     {id:"A005",name:"Fatima Malik",mobile:"0311-9988776",house:"22",street:"5",block:"B",project:"Bahria EMC",installDate:"2024-09-01",notes:"",status:"active"},
     {id:"A006",name:"Kamran Shah",mobile:"0322-4455667",house:"8",street:"1",block:"A",project:"Bahria EMC",installDate:"2024-10-10",notes:"",status:"active"},
   ];
-  // FORCED BYPASS: Agar koi bhi doosra function button ko "⏳ Loading..." par freeze kare, to yeh use khol dega
+
+  S.invoices = [
+    {id:"ALM-001",custId:"A001",date:"2025-05-20",items:[{name:"Alarm Panel",qty:1,price:3500},{name:"Door Contact",qty:4,price:450},{name:"Installation Charges",qty:1,price:1500}],status:"unpaid",total:6800},
+    {id:"ALM-002",custId:"A003",date:"2025-06-01",items:[{name:"Smoke Detector",qty:2,price:1200},{name:"Wiring Charges",qty:1,price:1000}],status:"paid",total:3400},
+  ];
+  
+  if (typeof sv === 'function') sv();
+}
+
+// FORCED BYPASS: Agar koi bhi doosra function button ko "⏳ Loading..." par freeze kare, to yeh use khol dega
 function forceUnlockAnyLoadingButton() {
   const buttons = document.getElementsByTagName('button');
   for (let btn of buttons) {
@@ -549,12 +558,6 @@ function forceUnlockAnyLoadingButton() {
 
 // Page load hone ke 1.5 second baad har haal me button ko unlock karo
 setTimeout(forceUnlockAnyLoadingButton, 1500);
-  S.invoices=[
-    {id:"ALM-001",custId:"A001",date:"2025-05-20",items:[{name:"Alarm Panel",qty:1,price:3500},{name:"Door Contact",qty:4,price:450},{name:"Installation Charges",qty:1,price:1500}],status:"unpaid",total:6800},
-    {id:"ALM-002",custId:"A003",date:"2025-06-01",items:[{name:"Smoke Detector",qty:2,price:1200},{name:"Wiring Charges",qty:1,price:1000}],status:"paid",total:3400},
-  ];
-  sv();
-}
 
 
 // ===== CAPTCHA =====
