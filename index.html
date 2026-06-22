@@ -725,7 +725,7 @@ function openCustDetail(id){
       <div style="font-size:13px;font-weight:700;color:var(--mut);margin-top:2px;">${c.name}</div>
       <span class="bdg" style="background:${c.status==='active'?'rgba(34,197,94,.2)':'rgba(239,68,68,.2)'};color:${c.status==='active'?'var(--grn)':'var(--red)'};">${c.status}</span></div>
     </div>
-    ${[['📞','Mobile',c.mobile],['📲','Device SN',c.imei||'—'],['🏠','Address',`H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}`],
+    ${[['📞','Mobile',c.mobile],['📲','Device SN',c.imei||'—'],['🔢','IMEI Number',c.imeiNo||'—'],['🏠','Address',`H# ${c.house}, Block ${c.block}${c.street?', St '+c.street:''}`],
       ['📍','Project',c.project],['📅','Install Date',c.installDate],c.notes?['📝','Notes',c.notes]:null
     ].filter(Boolean).map(([i,l,v])=>`
       <div style="padding:8px 0;border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-start;">
@@ -1408,6 +1408,7 @@ function showAddCust(){
     <div class="fw"><label class="fl">Customer Name *</label><input class="fi" id="fn" placeholder="Full name"/></div>
     <div class="fw"><label class="fl">Mobile *</label><input class="fi" id="fm" placeholder="0300-0000000" type="tel"/></div>
     <div class="fw"><label class="fl">Device SN</label><input class="fi" id="fimei" placeholder="Device Serial Number" maxlength="30"/></div>
+    <div class="fw"><label class="fl">IMEI Number</label><input class="fi" id="fimeino" placeholder="IMEI Number" maxlength="20"/></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fw"><label class="fl">House # *</label><input class="fi" id="fh" placeholder="12"/></div>
       <div class="fw"><label class="fl">Street #</label><input class="fi" id="fs" placeholder="5"/></div>
@@ -1430,7 +1431,7 @@ function saveCust(){
   const fe=document.getElementById('fe');
   if(!name||!mobile||!house||!block){fe.textContent="Name, Mobile, House, Block required!";fe.style.display="block";return;}
   const _u=S.users.find(u=>u.id===S.uid)||{};
-  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,imei:document.getElementById('fimei').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),status:"active",createdBy:S.uid,createdByName:_u.name||''});
+  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,imei:document.getElementById('fimei').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),imeiNo:document.getElementById('fimeino').value.trim(),status:"active",createdBy:S.uid,createdByName:_u.name||''});
   sv();closeM();renderCusts();renderDash();buildProjPills();updateSubcatPills();showToast("Customer added! ✓");
 }
 function showEditCust(id){
@@ -1440,6 +1441,7 @@ function showEditCust(id){
     <div class="fw"><label class="fl">Name</label><input class="fi" id="en" value="${c.name}"/></div>
     <div class="fw"><label class="fl">Mobile</label><input class="fi" id="em" value="${c.mobile}"/></div>
     <div class="fw"><label class="fl">Device SN</label><input class="fi" id="eimei" value="${c.imei||''}" placeholder="Device Serial Number" maxlength="30"/></div>
+    <div class="fw"><label class="fl">IMEI Number</label><input class="fi" id="eimeino" value="${c.imeiNo||''}" placeholder="IMEI Number" maxlength="20"/></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fw"><label class="fl">House #</label><input class="fi" id="eh" value="${c.house}"/></div>
       <div class="fw"><label class="fl">Street #</label><input class="fi" id="es" value="${c.street||''}"/></div>
@@ -1458,6 +1460,7 @@ function showEditCust(id){
 function updCust(id){
   const c=S.custs.find(x=>x.id===id);if(!c)return;
   const data={name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,imei:document.getElementById('eimei').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim()};
+  imeiNo:document.getElementById('eimeino').value.trim(),
   if(S.role==='admin'){
     requestEdit('customer',id,data,`H# ${c.house}, Block ${c.block} — ${c.name}`);
     closeM();return;
