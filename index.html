@@ -435,13 +435,14 @@ function sv() {
 function listenToFirebase() {
   db.ref('crm_data').on('value', (snapshot) => {
     const d = snapshot.val();
+    
     if (d) {
       isSyncingFromFirebase = true;
       
       S.custs = d.custs || S.custs;
       S.invoices = d.invoices || S.invoices;
       S.prices = d.prices || S.prices;
-      S.users = d.users || S.users; // Naye passwords foran yahan sab browsers me update ho jayenge
+      S.users = d.users || S.users; 
       S.imeis = d.imeis || S.imeis;
       S.pendingEdits = d.pendingEdits || S.pendingEdits;
 
@@ -460,16 +461,31 @@ function listenToFirebase() {
       
       isSyncingFromFirebase = false;
     } else {
-      // Agar Firebase khali hai to pehli dafa default data chala jaye
+      // AGAR FIREBASE KHALI HAI: Toh aapka local/default data pehli baar upload karein
+      console.log("Firebase is empty, seeding default data...");
       sv();
     }
     
-    // Login button ko enable karna jab data load ho jaye
+    // LOGIN BUTTON KO UNLOCK KARNA (Yeh ab har haal me chalega)
+    setTimeout(() => {
+      const btn = document.getElementById('login-btn');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Sign In →';
+        console.log("Login button unlocked successfully!");
+      }
+    }, 500); // Adha second ruk kar unlock karein taaki data load ho chuka ho
+
+  }, (error) => {
+    console.error('Firebase read error:', error);
+    // Agar koi error aaye tab bhi login button open ho jaye taaki aap stuck na hon
     const btn = document.getElementById('login-btn');
     if (btn) {
       btn.disabled = false;
       btn.textContent = 'Sign In →';
     }
+  });
+}
   }, (error) => {
     console.error('Firebase read error:', error);
   });
