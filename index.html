@@ -1025,6 +1025,7 @@ function showNewInvoice(preCust){
       </div>
       <div class="fw"><label class="fl">Block *</label><input class="fi" id="db" placeholder="B"/></div>
       <div class="fw"><label class="fl">Project *</label><select class="fi" id="dpr">${PROJECTS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+      <div class="fw"><label class="fl">Device Mobile Number</label><input class="fi" id="fdmob" placeholder="0300-0000000" type="tel"/></div>
       <div class="fw"><label class="fl">Device SN</label><input class="fi" id="dimei" placeholder="Device Serial Number" maxlength="30"/></div>
       <button class="btn bsm bo" onclick="toggleDirectInvoice()">← Select Existing Customer Instead</button>
     </div>
@@ -1431,7 +1432,7 @@ function saveCust(){
   const fe=document.getElementById('fe');
   if(!name||!mobile||!house||!block){fe.textContent="Name, Mobile, House, Block required!";fe.style.display="block";return;}
   const _u=S.users.find(u=>u.id===S.uid)||{};
-  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,imei:document.getElementById('fimei').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),imeiNo:document.getElementById('fimeino').value.trim(),status:"active",createdBy:S.uid,createdByName:_u.name||''});
+  S.custs.unshift({id:"A"+String(Date.now()).slice(-6),name,mobile,deviceMobile:document.getElementById('fdmob').value.trim(),imei:document.getElementById('fimei').value.trim(),house,street:document.getElementById('fs').value.trim(),block,project:document.getElementById('fpr').value,installDate:document.getElementById('fid').value,notes:document.getElementById('fno').value.trim(),imeiNo:document.getElementById('fimeino').value.trim(),status:"active",createdBy:S.uid,createdByName:_u.name||''});
   sv();closeM();renderCusts();renderDash();buildProjPills();updateSubcatPills();showToast("Customer added! ✓");
 }
 function showEditCust(id){
@@ -1440,6 +1441,7 @@ function showEditCust(id){
   document.getElementById('mbody').innerHTML=`
     <div class="fw"><label class="fl">Name</label><input class="fi" id="en" value="${c.name}"/></div>
     <div class="fw"><label class="fl">Mobile</label><input class="fi" id="em" value="${c.mobile}"/></div>
+    <div class="fw"><label class="fl">Device Mobile Number</label><input class="fi" id="edmob" value="${c.deviceMobile||''}" placeholder="0300-0000000" type="tel"/></div>
     <div class="fw"><label class="fl">Device SN</label><input class="fi" id="eimei" value="${c.imei||''}" placeholder="Device Serial Number" maxlength="30"/></div>
     <div class="fw"><label class="fl">IMEI Number</label><input class="fi" id="eimeino" value="${c.imeiNo||''}" placeholder="IMEI Number" maxlength="20"/></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -1459,7 +1461,7 @@ function showEditCust(id){
 }
 function updCust(id){
   const c=S.custs.find(x=>x.id===id);if(!c)return;
-  const data={name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,imei:document.getElementById('eimei').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim(),imeiNo:document.getElementById('eimeino').value.trim()};
+  const data={name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,deviceMobile:document.getElementById('edmob').value.trim(),imei:document.getElementById('eimei').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim(),imeiNo:document.getElementById('eimeino').value.trim()};
   if(S.role==='admin'){
     requestEdit('customer',id,data,`H# ${c.house}, Block ${c.block} — ${c.name}`);
     closeM();return;
