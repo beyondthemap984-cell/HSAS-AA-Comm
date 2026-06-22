@@ -433,8 +433,50 @@ function syncToFirebase() {
   }).catch(e => console.error('Firebase save error:', e));
 }
 
+// ===== REAL-TIME SERVER SYNC VIA FIREBASE =====
+let _syncTimer = null;
+function sv() {
+  localStorage.setItem('alm_custs', JSON.stringify(S.custs));
+  localStorage.setItem('alm_invoices', JSON.stringify(S.invoices));
+  localStorage.setItem('alm_prices', JSON.stringify(S.prices));
+  localStorage.setItem('alm_users', JSON.stringify(S.users));
+  localStorage.setItem('alm_imeis', JSON.stringify(S.imeis));
+  localStorage.setItem('alm_pending', JSON.stringify(S.pendingEdits));
+  
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(syncToFirebase, 400);
+}
+
+function syncToFirebase() {
+  if (typeof firebase !== 'undefined' && firebase.apps.length) {
+    firebase.database().ref('crm_data').set({
+      custs: S.custs,
+      invoices: S.invoices,
+      prices: S.prices,
+      users: S.users,
+      imeis: S.imeis,
+      pendingEdits: S.pendingEdits
+    }).catch(e => console.error('Firebase save error:', e));
+  }
+}
+
 function listenToFirebase() {
-  db.ref('crm_data').on('value', (snapshot) => {
+  const btn = document.getElementById('login-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Loading Server Data...";
+  }
+
+  if (typeof firebase === 'undefined') {
+    console.error("Firebase load nahi ho saka.");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In (Offline) →';
+    }
+    return;
+  }
+
+  firebase.database().ref('crm_data').on('value', (snapshot) => {
     const d = snapshot.val();
     
     if (d) {
@@ -462,7 +504,6 @@ function listenToFirebase() {
     
     // Button unlock karne ka permanent code
     setTimeout(() => {
-      const btn = document.getElementById('login-btn');
       if (btn) {
         btn.disabled = false;
         btn.style.opacity = "1";
@@ -472,7 +513,6 @@ function listenToFirebase() {
 
   }, (error) => {
     console.error('Firebase read error:', error);
-    const btn = document.getElementById('login-btn');
     if (btn) {
       btn.disabled = false;
       btn.style.opacity = "1";
@@ -481,25 +521,10 @@ function listenToFirebase() {
   });
 }
 
-// App start hote hi Firebase listen shuru karein
-listenToFirebase();
-  }, (error) => {
-    console.error('Firebase read error:', error);
-  });
-}
+// Firebase system shuru karein
+setTimeout(listenToFirebase, 800);
 
-// Live sync ko chalu karna
-listenToFirebase();
-  }).catch(e=>{
-    console.error('Server load error:',e);
-  }).finally(()=>{
-    const btn=document.getElementById('login-btn');
-    if(btn){btn.disabled=false;btn.textContent='Sign In →';}
-  });
-}
-  listenToFirebase();
-// loadFromServer();
-
+// Default seed data agar local me kuch na ho
 if(S.custs.length===0){
   S.custs=[
     {id:"A001",name:"Bilal Khan",mobile:"0321-9876543",house:"45",street:"2",block:"C",project:"Bahria EMC",installDate:"2024-05-20",notes:"4 door contacts, backyard",status:"active"},
