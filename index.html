@@ -1459,7 +1459,7 @@ function showEditCust(id){
 }
 function updCust(id){
   const c=S.custs.find(x=>x.id===id);if(!c)return;
-  const data={name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,imei:document.getElementById('eimei').value.trim(),imeiNo:document.getElementById('eimeino').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim()};
+  const data={name:document.getElementById('en').value.trim()||c.name,mobile:document.getElementById('em').value.trim()||c.mobile,imei:document.getElementById('eimei').value.trim(),house:document.getElementById('eh').value.trim()||c.house,street:document.getElementById('es').value.trim(),block:document.getElementById('eb').value.trim()||c.block,project:document.getElementById('ep').value,installDate:document.getElementById('eid').value,status:document.getElementById('est').value,notes:document.getElementById('eno').value.trim(),imeiNo:document.getElementById('eimeino').value.trim()};
   if(S.role==='admin'){
     requestEdit('customer',id,data,`H# ${c.house}, Block ${c.block} — ${c.name}`);
     closeM();return;
