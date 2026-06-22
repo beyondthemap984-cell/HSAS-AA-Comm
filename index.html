@@ -13,6 +13,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{--or:#EA580C;--ord:#C2410C;--bg:#FFF7F0;--card:#FFFFFF;--card2:#FEF3E8;--bdr:#FDBA74;--txt:#1C0F00;--mut:#78716C;--dim:#FDE8D0;--grn:#16A34A;--red:#DC2626;--ylw:#D97706;--blu:#2563EB;}
@@ -390,55 +392,91 @@ function loadS(){return{
 };}
 let S=loadS();
 
-// ===== SERVER SYNC (MongoDB via Vercel API routes) =====
-// Sirf localStorage ki jagah ab server (MongoDB) sab browsers/devices ke beech data sync karta hai.
-let _syncTimer=null;
-function sv(){
-  localStorage.setItem('alm_custs',JSON.stringify(S.custs));
-  localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
-  localStorage.setItem('alm_prices',JSON.stringify(S.prices));
-  localStorage.setItem('alm_users',JSON.stringify(S.users));
-  localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
-  localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
-  // Debounce: rapid changes ko ek hi request mein batch karta hai
-  clearTimeout(_syncTimer);
-  _syncTimer=setTimeout(syncToServer,400);
+// ===== FIREBASE CONFIGURATION =====
+const firebaseConfig = {
+  apiKey: "AIzaSyAs8_fI8YfLg-8mJ0WfM2m0O-YgB6gW-8k",
+  authDomain: "aa-alarm.firebaseapp.com",
+  databaseURL: "https://aa-alarm-default-rtdb.firebaseio.com",
+  projectId: "aa-alarm",
+  storageBucket: "aa-alarm.appspot.com",
+  messagingSenderId: "36735515286",
+  appId: "1:36735515286:web:7dc30e062d98c7161b9b18"
+};
+
+// Firebase ko initialize (shuru) karna
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ===== REAL-TIME SERVER SYNC VIA FIREBASE =====
+let isSyncingFromFirebase = false;
+
+function sv() {
+  localStorage.setItem('alm_custs', JSON.stringify(S.custs));
+  localStorage.setItem('alm_invoices', JSON.stringify(S.invoices));
+  localStorage.setItem('alm_prices', JSON.stringify(S.prices));
+  localStorage.setItem('alm_users', JSON.stringify(S.users));
+  localStorage.setItem('alm_imeis', JSON.stringify(S.imeis));
+  localStorage.setItem('alm_pending', JSON.stringify(S.pendingEdits));
+
+  // Jab hum khud database se data le rahe hon, tab dobara push na ho (loop se bachne ke liye)
+  if (!isSyncingFromFirebase) {
+    db.ref('crm_data').set({
+      custs: S.custs,
+      invoices: S.invoices,
+      prices: S.prices,
+      users: S.users,
+      imeis: S.imeis,
+      pendingEdits: S.pendingEdits
+    }).catch(e => console.error('Firebase save error:', e));
+  }
 }
-function syncToServer(){
-  fetch('/api/data',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      custs:S.custs, invoices:S.invoices, prices:S.prices,
-      users:S.users, imeis:S.imeis, pendingEdits:S.pendingEdits
-    })
-  }).catch(e=>console.error('Server save error:',e));
-}
-function loadFromServer(){
-  fetch('/api/data').then(r=>r.json()).then(d=>{
-    if(d&&Object.keys(d).length>0&&(d.custs||d.users||d.invoices)){
-      S.custs=d.custs||S.custs;
-      S.invoices=d.invoices||S.invoices;
-      S.prices=d.prices||S.prices;
-      // Users hamesha server se lo — localStorage ignore karo
-      if(d.users&&d.users.length>0){
-        S.users=d.users;
-      }
-      S.imeis=d.imeis||S.imeis;
-      S.pendingEdits=d.pendingEdits||S.pendingEdits;
-      localStorage.setItem('alm_custs',JSON.stringify(S.custs));
-      localStorage.setItem('alm_invoices',JSON.stringify(S.invoices));
-      localStorage.setItem('alm_prices',JSON.stringify(S.prices));
-      localStorage.setItem('alm_users',JSON.stringify(S.users));
-      localStorage.setItem('alm_imeis',JSON.stringify(S.imeis));
-      localStorage.setItem('alm_pending',JSON.stringify(S.pendingEdits));
-      if(typeof renderDash==='function')renderDash();
-      if(typeof renderCusts==='function')renderCusts();
-      if(typeof renderUsers==='function')renderUsers();
+
+// Har browser me password aur baki data ko bina page refresh kiye live sync karne ka system
+function listenToFirebase() {
+  db.ref('crm_data').on('value', (snapshot) => {
+    const d = snapshot.val();
+    if (d) {
+      isSyncingFromFirebase = true;
+      
+      S.custs = d.custs || S.custs;
+      S.invoices = d.invoices || S.invoices;
+      S.prices = d.prices || S.prices;
+      S.users = d.users || S.users; // Naye passwords foran yahan sab browsers me update ho jayenge
+      S.imeis = d.imeis || S.imeis;
+      S.pendingEdits = d.pendingEdits || S.pendingEdits;
+
+      // Browser ke andar memory me save karna
+      localStorage.setItem('alm_custs', JSON.stringify(S.custs));
+      localStorage.setItem('alm_invoices', JSON.stringify(S.invoices));
+      localStorage.setItem('alm_prices', JSON.stringify(S.prices));
+      localStorage.setItem('alm_users', JSON.stringify(S.users));
+      localStorage.setItem('alm_imeis', JSON.stringify(S.imeis));
+      localStorage.setItem('alm_pending', JSON.stringify(S.pendingEdits));
+
+      // Screen par chalne wale sections ko naye data ke sath refresh karna
+      if (typeof renderDash === 'function') renderDash();
+      if (typeof renderCusts === 'function') renderCusts();
+      if (typeof renderUsers === 'function') renderUsers();
+      
+      isSyncingFromFirebase = false;
     } else {
-      // Server par abhi kuch save nahi — local (default seed) data ko server par push kar dein
-      syncToServer();
+      // Agar Firebase khali hai to pehli dafa default data chala jaye
+      sv();
     }
+    
+    // Login button ko enable karna jab data load ho jaye
+    const btn = document.getElementById('login-btn');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In →';
+    }
+  }, (error) => {
+    console.error('Firebase read error:', error);
+  });
+}
+
+// Live sync ko chalu karna
+listenToFirebase();
   }).catch(e=>{
     console.error('Server load error:',e);
   }).finally(()=>{
