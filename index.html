@@ -497,7 +497,8 @@ listenToFirebase();
     if(btn){btn.disabled=false;btn.textContent='Sign In →';}
   });
 }
-loadFromServer();
+  listenToFirebase();
+// loadFromServer();
 
 if(S.custs.length===0){
   S.custs=[
