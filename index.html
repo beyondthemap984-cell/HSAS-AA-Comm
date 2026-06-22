@@ -226,7 +226,17 @@ function listenToFirebase() {
     btn.textContent = "Loading Server Data...";
   }
 
+  // Pehle ek timeout laga dete hain taaki agar 4 seconds mein server respond na kare, to local data chal jaye
+  const timeout = setTimeout(() => {
+    if (btn && btn.disabled) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In →';
+      showToast("Offline Mode: Local data loaded.");
+    }
+  }, 4000);
+
   db.ref('crm_data').on('value', (snapshot) => {
+    clearTimeout(timeout); // Server ka response aa gaya, to timeout cancel
     const d = snapshot.val();
     if (d) {
       S.custs = d.custs || S.custs;
@@ -234,6 +244,15 @@ function listenToFirebase() {
       localStorage.setItem('alm_custs', JSON.stringify(S.custs));
       localStorage.setItem('alm_invoices', JSON.stringify(S.invoices));
     }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Sign In →';
+    }
+  }, (error) => {
+    // Agar Firebase rules ya network ka koi error aaye, tab bhi button active ho jaye
+    clearTimeout(timeout);
+    console.error('Firebase read error:', error);
+    showToast("Server error. Using local data.");
     if (btn) {
       btn.disabled = false;
       btn.textContent = 'Sign In →';
