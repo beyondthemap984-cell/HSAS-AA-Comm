@@ -591,10 +591,9 @@ function goTab(t){
 
 function renderDash(){
   if(S.role==='user'){
-    const myCusts=S.custs.filter(c=>c.createdBy===S.uid);
     const myInvs=S.invoices.filter(i=>i.createdBy===S.uid);
-    document.getElementById('s-total').textContent=myCusts.length;
-    document.getElementById('s-active').textContent=myCusts.filter(c=>c.status==='active').length;
+    document.getElementById('s-total').textContent=S.custs.length;
+    document.getElementById('s-active').textContent=S.custs.filter(c=>c.status==='active').length;
     document.getElementById('s-rev').textContent=myInvs.length;
     document.getElementById('s-inv').textContent=myInvs.filter(i=>i.status==='unpaid').length;
     const sl=document.getElementById('s-rev').closest('.sc');
@@ -689,7 +688,6 @@ function goBackToCategory(){
 function renderCusts(){
   const q=(document.getElementById('csearch')||{}).value||'';
   let base=S.custs;
-  if(S.role==='user')base=base.filter(c=>c.createdBy===S.uid);
   const list=base.filter(c=>{
     const mq=!q||c.name.toLowerCase().includes(q.toLowerCase())||c.mobile.includes(q)||c.house.includes(q)||c.block.toLowerCase().includes(q.toLowerCase())||(c.imei||'').toLowerCase().includes(q.toLowerCase());
     const matchProj=S.projFilter==='all'||c.project===S.projFilter;
@@ -746,7 +744,7 @@ function openCustDetail(id){
       </div>`).join('')}
     </div>
     <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn bsm" style="background:rgba(255,107,0,.15);color:var(--or);border:none;" onclick="closeM();openM('edit-cust','${c.id}')">✏ Edit</button>
+      ${(S.role!=='user'||c.createdBy===S.uid)?`<button class="btn bsm" style="background:rgba(255,107,0,.15);color:var(--or);border:none;" onclick="closeM();openM('edit-cust','${c.id}')">✏ Edit</button>`:''}
       ${S.role==='superadmin'||S.role==='admin'?`<button class="btn bsm br" onclick="if(confirm('Delete?')){delCust('${c.id}')}">🗑 ${S.role==='admin'?'Request Delete':'Delete'}</button>`:''}
     </div>
   `;
