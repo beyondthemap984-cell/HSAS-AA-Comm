@@ -1170,8 +1170,7 @@ function genInvPdf(inv,c){
   doc.setFont('helvetica','normal');doc.setFontSize(9);
   doc.text('Customer: '+c.name,20,y);y+=14;
   doc.text('Mobile: '+c.mobile,20,y);y+=14;
-  doc.text('Address: H# '+c.house+', Block '+c.block+(c.size?', 
-  Size '+c.size:''),20,y);y+=14;
+  doc.text('Address: H# '+c.house+', Block '+c.block+(c.size?', Size '+c.size:''),20,y);y+=14;
   doc.text('Project: '+c.project,20,y);y+=14;
   if(c.imei){doc.text('Device SN: '+c.imei,20,y);y+=14;}
   y+=6;
